@@ -83,14 +83,25 @@ int main(void) {
     pthread_create(&thread, NULL, gameUpdater, &delay);
 
     bool running = true;
+    Sint32 mouseX = -1, mouseY = -1;
     while (running) {
         SDL_Event event;
 
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) running = false;
+            switch (event.type) {
+                case SDL_QUIT:
+                    running = false;
+                    break;
+
+                case SDL_MOUSEMOTION:
+                    mouseX = event.motion.x;
+                    mouseY = event.motion.y;
+                    break;
+
+            }
         }
 
-        draw(renderer, grid, blockSize);
+        draw(renderer, grid, blockSize, mouseX, mouseY);
 
         SDL_Delay(1000 / fps);
     }

@@ -36,7 +36,7 @@ void update(grid_t grid) {
     return;
 }
 
-void draw(SDL_Renderer* renderer, grid_t grid, int blockSize) {
+void draw(SDL_Renderer* renderer, grid_t grid, int blockSize, Sint32 mouseX, Sint32 mouseY) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xff);
     SDL_RenderClear(renderer);
 
@@ -47,6 +47,17 @@ void draw(SDL_Renderer* renderer, grid_t grid, int blockSize) {
             SDL_Rect rect = {x * blockSize, y * blockSize, blockSize, blockSize};
             SDL_RenderFillRect(renderer, &rect);
         }
+
+    if ( (mouseX > 0 && mouseX < grid.cols * blockSize) && 
+            (mouseY > 0 && mouseY < grid.rows * blockSize) )
+    {
+        int x = mouseX - (mouseX % blockSize);
+        int y = mouseY - (mouseY % blockSize);
+
+        SDL_Rect rect = {x, y, blockSize, blockSize};
+        SDL_SetRenderDrawColor(renderer, 0xaa, 0xaa, 0xaa, 0xff);
+        SDL_RenderFillRect(renderer, &rect);
+    }
 
     SDL_RenderPresent(renderer);
 

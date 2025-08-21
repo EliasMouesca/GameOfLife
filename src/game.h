@@ -9,6 +9,6 @@
 #include "grid.h"
 
 void update(grid_t grid);
-void draw(SDL_Renderer* renderer, grid_t grid, int blockSize);
+void draw(SDL_Renderer* renderer, grid_t grid, int blockSize, Sint32 mouseX, Sint32 mouseY);
 
 #endif

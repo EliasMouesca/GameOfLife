@@ -60,7 +60,7 @@ int main(void) {
 
 
     int windowWidth = grid.cols * blockSize;
-    int windowHeight = grid.cols * blockSize;
+    int windowHeight = grid.rows * blockSize;
 
 
     Uint32 initFlags = SDL_INIT_VIDEO;

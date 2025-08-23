@@ -11,10 +11,12 @@
 pthread_mutex_t gridLock;
 grid_t grid;
 
+bool updating = false;
+
 void* gameUpdater(void* arg) {
     Uint32 delay = *((Uint32*) arg);
 
-    while (true) {
+    while (updating) {
         pthread_mutex_lock(&gridLock);
         update(grid);
         pthread_mutex_unlock(&gridLock);
@@ -80,7 +82,6 @@ int main(void) {
     pthread_mutex_init(&gridLock, NULL);
 
     pthread_t thread;
-    pthread_create(&thread, NULL, gameUpdater, &delay);
 
     bool running = true;
     Sint32 mouseX = -1, mouseY = -1;
@@ -96,6 +97,27 @@ int main(void) {
                 case SDL_MOUSEMOTION:
                     mouseX = event.motion.x;
                     mouseY = event.motion.y;
+                    break;
+
+                case SDL_MOUSEBUTTONDOWN:
+                    int c = event.button.x / blockSize;
+                    int r = event.button.y / blockSize;
+
+                    grid.cells[r * grid.cols + c] = !grid.cells[r * grid.cols + c];
+
+                    break;
+
+                case SDL_KEYDOWN:
+                    switch (event.key.keysym.sym) {
+                        case SDLK_SPACE:
+                            updating = !updating;
+                            if (updating)
+                                pthread_create(&thread, NULL, gameUpdater, &delay);
+                            break;
+                        case SDLK_n:
+                            update(grid);
+                            break;
+                    }
                     break;
 
             }

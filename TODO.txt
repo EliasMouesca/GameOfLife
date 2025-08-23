@@ -1,3 +1,0 @@
-- Make it a drawable canvas
-- Step update with key press
-- Code some fun examples, cycle through them with arrow keys

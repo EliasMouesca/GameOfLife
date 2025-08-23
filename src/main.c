@@ -7,6 +7,7 @@
 #include "game.h"
 #include "grid.h"
 #include "config.h"
+#include "examples.h"
 
 pthread_mutex_t gridLock;
 grid_t grid;
@@ -52,16 +53,12 @@ int main(void) {
     int middleX = grid.cols / 2;
     int middleY = grid.rows / 2;
 
-    grid.cells[(middleY - 1) * grid.cols + (middleX - 1)] = true;
-    grid.cells[(middleY - 1) * grid.cols + middleX] = true;
-    grid.cells[middleY * grid.cols + middleX] = true;
-    grid.cells[middleY * grid.cols + (middleX + 1)] = true;
-    grid.cells[(middleY + 1) * grid.cols + middleX] = true;
-
+    example_t e = chaos();
+    loadExample(grid, e);
+    destroyExample(&e);
 
     int windowWidth = grid.cols * blockSize;
     int windowHeight = grid.rows * blockSize;
-
 
     Uint32 initFlags = SDL_INIT_VIDEO;
 
@@ -117,12 +114,36 @@ int main(void) {
                         case SDLK_n:
                             update(grid);
                             break;
+                        case SDLK_1:
+                            e = chaos();
+                            loadExample(grid, e);
+                            destroyExample(&e);
+                            break;
+                        case SDLK_2:
+                            e = diehard();
+                            loadExample(grid, e);
+                            destroyExample(&e);
+                            break;
+                        case SDLK_3:
+                            e = glider();
+                            loadExample(grid, e);
+                            destroyExample(&e);
+                            break;
+                        case SDLK_4:
+                            e = acorn();
+                            loadExample(grid, e);
+                            destroyExample(&e);
+                            break;
+                        case SDLK_5:
+                            e = galaxy();
+                            loadExample(grid, e);
+                            destroyExample(&e);
+                            break;
                     }
                     break;
-
-            }
+                }
         }
-
+ 
         draw(renderer, grid, blockSize, mouseX, mouseY);
 
         SDL_Delay(1000 / fps);

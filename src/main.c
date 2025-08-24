@@ -32,8 +32,8 @@ int main(int argc, char* argv[]) {
 
     char configPath[64];
 
-    if (argc > 2) 
-        strcpy(configPath, argv[0]);
+    if (argc >= 2) 
+        strcpy(configPath, argv[1]);
     else
         strcpy(configPath, "config.txt");
         

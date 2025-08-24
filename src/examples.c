@@ -4,8 +4,8 @@
 void loadExample(grid_t grid, example_t example) {
     memset(grid.cells, false, grid.cols * grid.rows * sizeof(bool));
 
-    int startingX;
-    int startingY;
+    int startingX = 0;
+    int startingY = 0;
 
     switch (example.hpos) {
         case LEFT: startingX = 0; break;
@@ -83,8 +83,8 @@ example_t glider() {
     example_t e;
     e.rows = 3;
     e.cols = 3;
-    e.hpos = TOP;
-    e.vpos = LEFT;
+    e.hpos = LEFT;
+    e.vpos = TOP;
     e.cells = malloc(e.rows * e.cols * sizeof(bool));
 
     bool data[3][3] = {

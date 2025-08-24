@@ -50,9 +50,6 @@ int main(void) {
 
     memset(grid.cells, 0, grid.rows * grid.cols * sizeof(bool));
 
-    int middleX = grid.cols / 2;
-    int middleY = grid.rows / 2;
-
     example_t e = chaos();
     loadExample(grid, e);
     destroyExample(&e);

@@ -27,10 +27,16 @@ void* gameUpdater(void* arg) {
     return NULL;
 }
 
-int main(void) {
+int main(int argc, char* argv[]) {
     config_t config;
 
-    char configPath[] = "config.txt";
+    char configPath[64];
+
+    if (argc > 2) 
+        strcpy(configPath, argv[0]);
+    else
+        strcpy(configPath, "config.txt");
+        
     if (parseConfig(configPath, &config) != 0)
         die("Failed to open %s", configPath);
 

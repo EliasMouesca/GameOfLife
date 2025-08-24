@@ -3,6 +3,8 @@
 
 #include "grid.h"
 
+#include <stdbool.h>
+
 typedef enum {
     LEFT,
     CENTER,

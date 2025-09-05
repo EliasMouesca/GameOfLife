@@ -14,7 +14,7 @@ Run the main executable.
 
 Press Space to start/stop/resume execution, press 1 through 5 to load an example or 0 to load an empty grid.
 
-At any moment, click any cell to toggle it.
+At any moment, click any cell to toggle it. And you can do it by steps too pressing the letter n.
 
 ## Config
 The program automatically tries opening "config.txt" but you can pass a config as the first parameter of the program and it'll read that one instead.

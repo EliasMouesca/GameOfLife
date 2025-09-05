@@ -20,11 +20,11 @@ At any moment, click any cell to toggle it. And you can do it by steps too press
 The program automatically tries opening "config.txt" but you can pass a config as the first parameter of the program and it'll read that one instead.
 
 ### Configuration options
-    - _rows_: Number of rows the grid has
-    - _cols_: Number of columns the grid has
-    - _block_size_: Size in pixels of one side of the cells
-    - _fps_: Frames per second, 30 will do just fine, you can only notice it when moving the mouse.
-    - _delay_: Milliseconds the game takes to update the grid
+- **rows**: Number of rows the grid has
+- **cols**: Number of columns the grid has
+- **block_size**: Size in pixels of one side of the cells
+- **fps**: Frames per second, 30 will do just fine, you can only notice it when moving the mouse.
+- **delay**: Milliseconds the game takes to update the grid
 
 ## Galery
 ![image](./img/1.png)

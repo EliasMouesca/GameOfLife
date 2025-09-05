@@ -28,6 +28,7 @@ typedef struct {
 void loadExample(grid_t grid, example_t example);
 void destroyExample(example_t* example);
 
+example_t nothing();
 example_t chaos();
 example_t diehard();
 example_t glider();

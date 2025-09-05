@@ -117,6 +117,11 @@ int main(int argc, char* argv[]) {
                         case SDLK_n:
                             update(grid);
                             break;
+                        case SDLK_0:
+                            e = nothing();
+                            loadExample(grid, e);
+                            destroyExample(&e);
+                            break;
                         case SDLK_1:
                             e = chaos();
                             loadExample(grid, e);

@@ -2,6 +2,8 @@ obj/*
 obj/
 obj
 
+config.txt
+
 main
 game
 test

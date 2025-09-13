@@ -1,5 +1,0 @@
-rows=50
-cols=50
-block_size=10
-fps=30
-delay=100

@@ -1,3 +1,2 @@
-- Agregar fotos, videos
 - Hacer que se pueda shiftear la grid usando las flechas
 - Guardar algunos estados anteriores y dibujar esos tmb en un grisesito

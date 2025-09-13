@@ -103,7 +103,9 @@ int main(int argc, char* argv[]) {
                     int c = event.button.x / blockSize;
                     int r = event.button.y / blockSize;
 
+                    pthread_mutex_lock(&gridLock);
                     grid.cells[r * grid.cols + c] = !grid.cells[r * grid.cols + c];
+                    pthread_mutex_unlock(&gridLock);
 
                     break;
 
@@ -115,47 +117,80 @@ int main(int argc, char* argv[]) {
                                 pthread_create(&thread, NULL, gameUpdater, &delay);
                             break;
                         case SDLK_n:
+                            pthread_mutex_lock(&gridLock);
                             update(grid);
+                            pthread_mutex_unlock(&gridLock);
                             break;
                         case SDLK_0:
                             e = nothing();
+                            pthread_mutex_lock(&gridLock);
                             loadExample(grid, e);
+                            pthread_mutex_unlock(&gridLock);
                             destroyExample(&e);
                             break;
                         case SDLK_1:
                             e = chaos();
+                            pthread_mutex_lock(&gridLock);
                             loadExample(grid, e);
+                            pthread_mutex_unlock(&gridLock);
                             destroyExample(&e);
                             break;
                         case SDLK_2:
                             e = diehard();
+                            pthread_mutex_lock(&gridLock);
                             loadExample(grid, e);
+                            pthread_mutex_unlock(&gridLock);
                             destroyExample(&e);
                             break;
                         case SDLK_3:
                             e = glider();
+                            pthread_mutex_lock(&gridLock);
                             loadExample(grid, e);
+                            pthread_mutex_unlock(&gridLock);
                             destroyExample(&e);
                             break;
                         case SDLK_4:
                             e = acorn();
+                            pthread_mutex_lock(&gridLock);
                             loadExample(grid, e);
+                            pthread_mutex_unlock(&gridLock);
                             destroyExample(&e);
                             break;
                         case SDLK_5:
                             e = galaxy();
+                            pthread_mutex_lock(&gridLock);
                             loadExample(grid, e);
+                            pthread_mutex_unlock(&gridLock);
                             destroyExample(&e);
                             break;
-                    }
+
+                        case SDLK_UP:
+                        case SDLK_LEFT:
+                        case SDLK_DOWN:
+                        case SDLK_RIGHT:
+                            pthread_mutex_lock(&gridLock);
+                            direction_t direction;
+                            switch (event.key.keysym.sym) {
+                                case SDLK_UP: direction = DIRECTION_UP; break;
+                                case SDLK_LEFT: direction = DIRECTION_LEFT; break;
+                                case SDLK_DOWN: direction = DIRECTION_DOWN; break;
+                                case SDLK_RIGHT: direction = DIRECTION_RIGHT; break;
+                            }
+                            shiftGrid(grid, direction);
+                            pthread_mutex_unlock(&gridLock);
+                            break;
+
+                    } // END switch(event.key.keycode)
                     break;
-                }
-        }
+                } // END switch(event.type)
+        } // END while(SDL_Poll)
  
+        pthread_mutex_lock(&gridLock);
         draw(renderer, grid, blockSize, mouseX, mouseY);
+        pthread_mutex_unlock(&gridLock);
 
         SDL_Delay(1000 / fps);
-    }
+    } // END while(running)
 
     free(grid.cells);
 

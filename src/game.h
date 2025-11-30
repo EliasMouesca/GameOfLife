@@ -20,7 +20,7 @@ typedef struct {
     Sint32 mouseX;
     Sint32 mouseY;
 
-
+    pthread_t updaterThread;
 
     grid_t grid;
     pthread_mutex_t gridLock;

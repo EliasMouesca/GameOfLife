@@ -1,11 +1,19 @@
 
 #include "game.h"
+
 #include "pthread.h"
+#include "log.h"
 
 void* gameUpdater(void* arg);
 
 game_t* createGame() {
+    info("Creating game");
     game_t* game = malloc(sizeof(game_t));
+    game->updating = false;
+    game->running= true;
+    pthread_mutex_init(&game->gridLock, NULL);
+    pthread_create(&game->updaterThread, NULL, gameUpdater, game);
+
     return game;
 }
 
@@ -16,11 +24,11 @@ void setGameConfig(game_t* game, config_t config) {
     const char* fpsStr = getValue(&config, "fps");
     const char* delayStr = getValue(&config, "delay");
 
-    if (!rowsStr) die("Could not parse 'rows' config parameter");
-    if (!colsStr) die("Could not parse 'cols' config parameter");
-    if (!blockSizeStr) die("Could not parse 'blockSize' config parameter");
-    if (!fpsStr) die("Could not parse 'fps' config parameter");
-    if (!delayStr) die("Could not parse 'delay' config parameter");
+    if (!rowsStr || rowsStr[0]=='\0') die("Could not parse 'rows' config parameter");
+    if (!colsStr || colsStr[0]=='\0') die("Could not parse 'cols' config parameter");
+    if (!blockSizeStr || blockSizeStr[0]=='\0') die("Could not parse 'blockSize' config parameter");
+    if (!fpsStr || fpsStr[0]=='\0') die("Could not parse 'fps' config parameter");
+    if (!delayStr || delayStr[0]=='\0') die("Could not parse 'delay' config parameter");
 
     int rows = game->grid.rows = atoi(rowsStr);
     int cols = game->grid.cols = atoi(colsStr);
@@ -35,7 +43,6 @@ void setGameConfig(game_t* game, config_t config) {
     example_t e = chaos();
     loadExample(game, e);
     destroyExample(&e);
-
 
 }
 
@@ -117,22 +124,24 @@ void draw(game_t* game) {
 }
 
 void* gameUpdater(void* arg) {
-    game_t* game = (game_t*) arg;
+    debug("Initialized game updater thread");
+    game_t* g = (game_t*) arg;
 
-    while (game->updating && game->running) {
-        update(game);
-        SDL_Delay(game->delay);
+    while (g->running) {
+        if (g->updating) update(g);
+        SDL_Delay(g->delay);
     }
+
+    debug("Finalized game updater thread");
 
     return NULL;
 }
 
 void handleEvents(game_t* game, SDL_Event event) {
-    pthread_t thread;
-
     switch (event.type) {
     case SDL_QUIT:
         game->running = false;
+        info("Quitting...");
         break;
 
     case SDL_MOUSEMOTION:
@@ -158,8 +167,14 @@ void handleEvents(game_t* game, SDL_Event event) {
         switch (event.key.keysym.sym) {
             case SDLK_SPACE:
                 game->updating = !game->updating;
-                if (game->updating)
-                    pthread_create(&thread, NULL, gameUpdater, game);
+                if (!game->updating) info("Game stopped");
+                else info("Game resumed");
+                break;
+            case SDLK_z:
+                game->updating = true;
+                break;
+            case SDLK_x:
+                game->updating = false;
                 break;
             case SDLK_n:
                 update(game);
@@ -246,6 +261,8 @@ void loadExample(game_t* game, example_t example) {
     }
 
     pthread_mutex_unlock(&game->gridLock);
+
+    info("Loaded example to grid");
 
     return;
 

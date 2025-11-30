@@ -23,10 +23,14 @@ typedef struct {
     bool updating;
     bool running;
 
+    Sint32 mouseX;
+    Sint32 mouseY;
+
 } game_t;
 
 void update(game_t* game);
-void draw(game_t* game, Sint32 mouseX, Sint32 mouseY);
+void draw(game_t* game);
+void handleEvents(game_t* game, SDL_Event event);
 void loadExample(game_t* game, example_t example);
 
 #endif

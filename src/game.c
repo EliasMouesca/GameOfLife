@@ -2,6 +2,8 @@
 #include "game.h"
 #include "pthread.h"
 
+void* gameUpdater(void* arg);
+
 void update(game_t* game) {
     pthread_mutex_lock(&game->gridLock);
     grid_t grid;
@@ -41,7 +43,7 @@ void update(game_t* game) {
     return;
 }
 
-void draw(game_t* game, Sint32 mouseX, Sint32 mouseY) {
+void draw(game_t* game) {
     int rows = game->grid.rows;
     int cols = game->grid.cols;
     int blockSize = game->blockSize;
@@ -60,11 +62,11 @@ void draw(game_t* game, Sint32 mouseX, Sint32 mouseY) {
             SDL_RenderFillRect(game->renderer, &rect);
         }
 
-    if ( (mouseX > 0 && mouseX < grid.cols * blockSize) && 
-            (mouseY > 0 && mouseY < grid.rows * blockSize) )
+    if ( (game->mouseX > 0 && game->mouseX < grid.cols * blockSize) && 
+            (game->mouseY > 0 && game->mouseY < grid.rows * blockSize) )
     {
-        int x = mouseX - (mouseX % blockSize);
-        int y = mouseY - (mouseY % blockSize);
+        int x = game->mouseX - (game->mouseX % blockSize);
+        int y = game->mouseY - (game->mouseY % blockSize);
 
         SDL_Rect rect = {x, y, blockSize, blockSize};
         SDL_SetRenderDrawColor(game->renderer, 0xaa, 0xaa, 0xaa, 0xff);
@@ -78,6 +80,106 @@ void draw(game_t* game, Sint32 mouseX, Sint32 mouseY) {
     return;
 
 }
+
+void* gameUpdater(void* arg) {
+    game_t* game = (game_t*) arg;
+
+    while (game->updating && game->running) {
+        update(game);
+        SDL_Delay(game->delay);
+    }
+
+    return NULL;
+}
+
+void handleEvents(game_t* game, SDL_Event event) {
+    pthread_t thread;
+
+    switch (event.type) {
+    case SDL_QUIT:
+        game->running = false;
+        break;
+
+    case SDL_MOUSEMOTION:
+        game->mouseX = event.motion.x;
+        game->mouseY = event.motion.y;
+        break;
+
+    case SDL_MOUSEBUTTONDOWN:
+        int c = event.button.x / game->blockSize;
+        int r = event.button.y / game->blockSize;
+
+        pthread_mutex_lock(&game->gridLock);
+        game->grid.cells[r * game->grid.cols + c] = !game->grid.cells[r * game->grid.cols + c];
+        pthread_mutex_unlock(&game->gridLock);
+
+        break;
+
+    case SDL_KEYDOWN:
+
+        example_t e;
+        bool shouldLoadExample = false;
+
+        switch (event.key.keysym.sym) {
+            case SDLK_SPACE:
+                game->updating = !game->updating;
+                if (game->updating)
+                    pthread_create(&thread, NULL, gameUpdater, game);
+                break;
+            case SDLK_n:
+                update(game);
+                break;
+            case SDLK_0:
+                e = nothing();
+                shouldLoadExample = true;
+                break;
+            case SDLK_1:
+                e = chaos();
+                shouldLoadExample = true;
+                break;
+            case SDLK_2:
+                e = diehard();
+                shouldLoadExample = true;
+                break;
+            case SDLK_3:
+                e = glider();
+                shouldLoadExample = true;
+                break;
+            case SDLK_4:
+                e = acorn();
+                shouldLoadExample = true;
+                break;
+            case SDLK_5:
+                e = galaxy();
+                shouldLoadExample = true;
+                break;
+
+            case SDLK_UP:
+            case SDLK_LEFT:
+            case SDLK_DOWN:
+            case SDLK_RIGHT:
+                pthread_mutex_lock(&game->gridLock);
+                direction_t direction;
+                switch (event.key.keysym.sym) {
+                    case SDLK_UP: direction = DIRECTION_UP; break;
+                    case SDLK_LEFT: direction = DIRECTION_LEFT; break;
+                    case SDLK_DOWN: direction = DIRECTION_DOWN; break;
+                    case SDLK_RIGHT: direction = DIRECTION_RIGHT; break;
+                }
+                shiftGrid(game->grid, direction);
+                pthread_mutex_unlock(&game->gridLock);
+                break;
+
+        } // END switch(event.key.keysym.sym) Qué botón se presionó?
+        if (shouldLoadExample) {
+            loadExample(game, e);
+            destroyExample(&e);
+            break;
+        }
+    } // END switch(event.type) Qué evento fue?
+
+}
+
 
 void loadExample(game_t* game, example_t example) {
 

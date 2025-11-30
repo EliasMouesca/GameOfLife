@@ -13,17 +13,6 @@
 
 game_t game;
 
-void* gameUpdater(void* arg) {
-    //Uint32 delay = *((Uint32*) arg);
-
-    while (game.updating && game.running) {
-        update(&game);
-        SDL_Delay(game.delay);
-    }
-
-    return NULL;
-}
-
 int main(int argc, char* argv[]) {
     config_t config;
 
@@ -87,112 +76,18 @@ int main(int argc, char* argv[]) {
 
     pthread_mutex_init(&game.gridLock, NULL);
 
-    pthread_t thread;
-
     game.running = true;
-    Sint32 mouseX = -1, mouseY = -1;
     while (game.running) {
         SDL_Event event;
 
         while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-                case SDL_QUIT:
-                    game.running = false;
-                    break;
-
-                case SDL_MOUSEMOTION:
-                    mouseX = event.motion.x;
-                    mouseY = event.motion.y;
-                    break;
-
-                case SDL_MOUSEBUTTONDOWN:
-                    int c = event.button.x / game.blockSize;
-                    int r = event.button.y / game.blockSize;
-
-                    pthread_mutex_lock(&game.gridLock);
-                    game.grid.cells[r * game.grid.cols + c] = !game.grid.cells[r * game.grid.cols + c];
-                    pthread_mutex_unlock(&game.gridLock);
-
-                    break;
-
-                case SDL_KEYDOWN:
-                    switch (event.key.keysym.sym) {
-                        case SDLK_SPACE:
-                            game.updating = !game.updating;
-                            if (game.updating)
-                                pthread_create(&thread, NULL, gameUpdater, NULL);
-                            break;
-                        case SDLK_n:
-                            update(&game);
-                            break;
-                        case SDLK_0:
-                            e = nothing();
-                            pthread_mutex_lock(&game.gridLock);
-                            loadExample(&game, e);
-                            pthread_mutex_unlock(&game.gridLock);
-                            destroyExample(&e);
-                            break;
-                        case SDLK_1:
-                            e = chaos();
-                            pthread_mutex_lock(&game.gridLock);
-                            loadExample(&game, e);
-                            pthread_mutex_unlock(&game.gridLock);
-                            destroyExample(&e);
-                            break;
-                        case SDLK_2:
-                            e = diehard();
-                            pthread_mutex_lock(&game.gridLock);
-                            loadExample(&game, e);
-                            pthread_mutex_unlock(&game.gridLock);
-                            destroyExample(&e);
-                            break;
-                        case SDLK_3:
-                            e = glider();
-                            pthread_mutex_lock(&game.gridLock);
-                            loadExample(&game, e);
-                            pthread_mutex_unlock(&game.gridLock);
-                            destroyExample(&e);
-                            break;
-                        case SDLK_4:
-                            e = acorn();
-                            pthread_mutex_lock(&game.gridLock);
-                            loadExample(&game, e);
-                            pthread_mutex_unlock(&game.gridLock);
-                            destroyExample(&e);
-                            break;
-                        case SDLK_5:
-                            e = galaxy();
-                            pthread_mutex_lock(&game.gridLock);
-                            loadExample(&game, e);
-                            pthread_mutex_unlock(&game.gridLock);
-                            destroyExample(&e);
-                            break;
-
-                        case SDLK_UP:
-                        case SDLK_LEFT:
-                        case SDLK_DOWN:
-                        case SDLK_RIGHT:
-                            pthread_mutex_lock(&game.gridLock);
-                            direction_t direction;
-                            switch (event.key.keysym.sym) {
-                                case SDLK_UP: direction = DIRECTION_UP; break;
-                                case SDLK_LEFT: direction = DIRECTION_LEFT; break;
-                                case SDLK_DOWN: direction = DIRECTION_DOWN; break;
-                                case SDLK_RIGHT: direction = DIRECTION_RIGHT; break;
-                            }
-                            shiftGrid(game.grid, direction);
-                            pthread_mutex_unlock(&game.gridLock);
-                            break;
-
-                    } // END switch(event.key.keycode)
-                    break;
-                } // END switch(event.type)
-        } // END while(SDL_Poll)
+            handleEvents(&game, event);
+        }
  
-        draw(&game, mouseX, mouseY);
+        draw(&game);
 
         SDL_Delay(1000 / game.fps);
-    } // END while(game.running)
+    }
 
     free(game.grid.cells);
 

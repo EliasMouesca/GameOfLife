@@ -4,6 +4,41 @@
 
 void* gameUpdater(void* arg);
 
+game_t* createGame() {
+    game_t* game = malloc(sizeof(game_t));
+    return game;
+}
+
+void setGameConfig(game_t* game, config_t config) {
+    const char* rowsStr = getValue(&config, "rows");
+    const char* colsStr = getValue(&config, "cols");
+    const char* blockSizeStr = getValue(&config, "block_size");
+    const char* fpsStr = getValue(&config, "fps");
+    const char* delayStr = getValue(&config, "delay");
+
+    if (!rowsStr) die("Could not parse 'rows' config parameter");
+    if (!colsStr) die("Could not parse 'cols' config parameter");
+    if (!blockSizeStr) die("Could not parse 'blockSize' config parameter");
+    if (!fpsStr) die("Could not parse 'fps' config parameter");
+    if (!delayStr) die("Could not parse 'delay' config parameter");
+
+    int rows = game->grid.rows = atoi(rowsStr);
+    int cols = game->grid.cols = atoi(colsStr);
+    game->blockSize = atoi(blockSizeStr);
+    game->fps = atoi(fpsStr);
+    game->delay = atoi(delayStr);
+
+    void* cells = game->grid.cells = malloc(rows * cols * sizeof(bool));
+
+    memset(cells, 0, rows * cols * sizeof(bool));
+
+    example_t e = chaos();
+    loadExample(game, e);
+    destroyExample(&e);
+
+
+}
+
 void update(game_t* game) {
     pthread_mutex_lock(&game->gridLock);
     grid_t grid;
@@ -216,5 +251,8 @@ void loadExample(game_t* game, example_t example) {
 
 }
 
-
+void destroyGame(game_t* game){
+    freeGrid(game->grid);
+    free(game);
+}
 

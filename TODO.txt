@@ -2,3 +2,4 @@
 - Que calcule los valores de la config dinamicamente si no están definidos
 - Agregar un help que explique las configuraciones posibles
 - Implementar getops
+- Colores configurables

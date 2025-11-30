@@ -4,7 +4,6 @@
 #include <stdarg.h>
 #include <time.h>
 
-// MISMO enum (no tocar)
 typedef enum {
     TRACE,
     DEBUG,
@@ -34,10 +33,6 @@ static const char* level_colors[] = {
 
 static const char* reset = "\033[0m";
 
-
-// ---------------------------------------------------------
-//  log_msg: versión variádica "normal"
-// ---------------------------------------------------------
 void log_msg(log_level_t level, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -57,11 +52,6 @@ void log_msg(log_level_t level, const char* fmt, ...) {
     va_end(args);
 }
 
-
-// ---------------------------------------------------------
-//  WRAPPERS: NO pueden llamar log_msg() correctamente.
-//  Así que repiten la misma lógica.
-// ---------------------------------------------------------
 static void log_wrapper(log_level_t level, const char* fmt, va_list args) {
     time_t t = time(NULL);
     struct tm* tm = localtime(&t);

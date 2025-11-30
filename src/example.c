@@ -1,33 +1,5 @@
 
-#include "examples.h"
-
-void loadExample(grid_t grid, example_t example) {
-    memset(grid.cells, false, grid.cols * grid.rows * sizeof(bool));
-
-    int startingX = 0;
-    int startingY = 0;
-
-    switch (example.hpos) {
-        case LEFT: startingX = 0; break;
-        case CENTER: startingX = grid.cols / 2 - example.cols / 2; break;
-        case RIGHT: startingX = grid.cols - example.cols; break;
-    }
-
-    switch (example.vpos) {
-        case TOP: startingY = 0; break;
-        case MIDDLE: startingY = grid.rows / 2 - example.rows / 2; break;
-        case BOTTOM: startingY = grid.rows - example.rows; break;
-    }
-
-    for (int y = 0; y < example.rows; y++)
-    for (int x = 0; x < example.cols; x++) {
-        if ( example.cells[y * example.cols + x] )
-            grid.cells[(startingY + y) * grid.cols + startingX + x] = true;
-    }
-
-    return;
-
-}
+#include "example.h"
 
 void destroyExample(example_t* example) {
     free(example->cells);

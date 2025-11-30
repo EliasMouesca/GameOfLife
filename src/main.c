@@ -7,21 +7,18 @@
 #include "game.h"
 #include "grid.h"
 #include "config.h"
-#include "examples.h"
+#include "example.h"
 
-pthread_mutex_t gridLock;
-grid_t grid;
+#define CONFIG_PATH_MAX_SIZE 256
 
-bool updating = false;
+game_t game;
 
 void* gameUpdater(void* arg) {
-    Uint32 delay = *((Uint32*) arg);
+    //Uint32 delay = *((Uint32*) arg);
 
-    while (updating) {
-        pthread_mutex_lock(&gridLock);
-        update(grid);
-        pthread_mutex_unlock(&gridLock);
-        SDL_Delay(delay);
+    while (game.updating && game.running) {
+        update(&game);
+        SDL_Delay(game.delay);
     }
 
     return NULL;
@@ -30,11 +27,15 @@ void* gameUpdater(void* arg) {
 int main(int argc, char* argv[]) {
     config_t config;
 
-    char configPath[64];
+    char configPath[CONFIG_PATH_MAX_SIZE];
 
-    if (argc >= 2) 
-        strcpy(configPath, argv[1]);
-    else
+    if (argc >= 2) {
+        size_t size = strlen(argv[1]);
+        if (size < CONFIG_PATH_MAX_SIZE)
+            strcpy(configPath, argv[1]);
+        else
+            die("Config path '%s' too large (max: %d characters)", argv[1], CONFIG_PATH_MAX_SIZE);
+    } else
         strcpy(configPath, "config.txt");
         
     if (parseConfig(configPath, &config) != 0)
@@ -46,52 +47,57 @@ int main(int argc, char* argv[]) {
     const char* fpsStr = getValue(&config, "fps");
     const char* delayStr = getValue(&config, "delay");
 
-    grid.rows = atoi(rowsStr);
-    grid.cols = atoi(colsStr);
-    int blockSize = atoi(blockSizeStr);
-    int fps = atoi(fpsStr);
-    int delay = atoi(delayStr);
+    if (!rowsStr) die("Could not parse 'rows' config parameter");
+    int rows = (game.grid.rows = atoi(rowsStr));
+    if (!colsStr) die("Could not parse 'cols' config parameter");
+    int cols = (game.grid.cols = atoi(colsStr));
+    if (!blockSizeStr) die("Could not parse 'blockSize' config parameter");
+    game.blockSize = atoi(blockSizeStr);
+    if (!fpsStr) die("Could not parse 'fps' config parameter");
+    game.fps = atoi(fpsStr);
+    if (!delayStr) die("Could not parse 'delay' config parameter");
+    game.delay = atoi(delayStr);
 
-    grid.cells = malloc(grid.rows * grid.cols * sizeof(bool));
+    void* cells = game.grid.cells = malloc(rows * cols * sizeof(bool));
 
-    memset(grid.cells, 0, grid.rows * grid.cols * sizeof(bool));
+    memset(cells, 0, rows * cols * sizeof(bool));
 
     example_t e = chaos();
-    loadExample(grid, e);
+    loadExample(&game, e);
     destroyExample(&e);
 
-    int windowWidth = grid.cols * blockSize;
-    int windowHeight = grid.rows * blockSize;
+    int windowWidth = cols * game.blockSize;
+    int windowHeight = rows * game.blockSize;
 
     Uint32 initFlags = SDL_INIT_VIDEO;
 
     if (SDL_Init(initFlags) != 0)
         die("Could not initialize SDL: %s", SDL_GetError());
 
-    SDL_Window* window = SDL_CreateWindow("DEMO",
+    game.window = SDL_CreateWindow("DEMO",
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
             windowWidth, windowHeight,
             0);
-    if (window == NULL)
+    if (game.window == NULL)
         die("Could not create window: %s", SDL_GetError());
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
-    if (renderer == NULL)
+    game.renderer = SDL_CreateRenderer(game.window, -1, 0);
+    if (game.renderer == NULL)
         die("Could not create renderer: %s", SDL_GetError());
 
-    pthread_mutex_init(&gridLock, NULL);
+    pthread_mutex_init(&game.gridLock, NULL);
 
     pthread_t thread;
 
-    bool running = true;
+    game.running = true;
     Sint32 mouseX = -1, mouseY = -1;
-    while (running) {
+    while (game.running) {
         SDL_Event event;
 
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_QUIT:
-                    running = false;
+                    game.running = false;
                     break;
 
                 case SDL_MOUSEMOTION:
@@ -100,67 +106,65 @@ int main(int argc, char* argv[]) {
                     break;
 
                 case SDL_MOUSEBUTTONDOWN:
-                    int c = event.button.x / blockSize;
-                    int r = event.button.y / blockSize;
+                    int c = event.button.x / game.blockSize;
+                    int r = event.button.y / game.blockSize;
 
-                    pthread_mutex_lock(&gridLock);
-                    grid.cells[r * grid.cols + c] = !grid.cells[r * grid.cols + c];
-                    pthread_mutex_unlock(&gridLock);
+                    pthread_mutex_lock(&game.gridLock);
+                    game.grid.cells[r * game.grid.cols + c] = !game.grid.cells[r * game.grid.cols + c];
+                    pthread_mutex_unlock(&game.gridLock);
 
                     break;
 
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.sym) {
                         case SDLK_SPACE:
-                            updating = !updating;
-                            if (updating)
-                                pthread_create(&thread, NULL, gameUpdater, &delay);
+                            game.updating = !game.updating;
+                            if (game.updating)
+                                pthread_create(&thread, NULL, gameUpdater, NULL);
                             break;
                         case SDLK_n:
-                            pthread_mutex_lock(&gridLock);
-                            update(grid);
-                            pthread_mutex_unlock(&gridLock);
+                            update(&game);
                             break;
                         case SDLK_0:
                             e = nothing();
-                            pthread_mutex_lock(&gridLock);
-                            loadExample(grid, e);
-                            pthread_mutex_unlock(&gridLock);
+                            pthread_mutex_lock(&game.gridLock);
+                            loadExample(&game, e);
+                            pthread_mutex_unlock(&game.gridLock);
                             destroyExample(&e);
                             break;
                         case SDLK_1:
                             e = chaos();
-                            pthread_mutex_lock(&gridLock);
-                            loadExample(grid, e);
-                            pthread_mutex_unlock(&gridLock);
+                            pthread_mutex_lock(&game.gridLock);
+                            loadExample(&game, e);
+                            pthread_mutex_unlock(&game.gridLock);
                             destroyExample(&e);
                             break;
                         case SDLK_2:
                             e = diehard();
-                            pthread_mutex_lock(&gridLock);
-                            loadExample(grid, e);
-                            pthread_mutex_unlock(&gridLock);
+                            pthread_mutex_lock(&game.gridLock);
+                            loadExample(&game, e);
+                            pthread_mutex_unlock(&game.gridLock);
                             destroyExample(&e);
                             break;
                         case SDLK_3:
                             e = glider();
-                            pthread_mutex_lock(&gridLock);
-                            loadExample(grid, e);
-                            pthread_mutex_unlock(&gridLock);
+                            pthread_mutex_lock(&game.gridLock);
+                            loadExample(&game, e);
+                            pthread_mutex_unlock(&game.gridLock);
                             destroyExample(&e);
                             break;
                         case SDLK_4:
                             e = acorn();
-                            pthread_mutex_lock(&gridLock);
-                            loadExample(grid, e);
-                            pthread_mutex_unlock(&gridLock);
+                            pthread_mutex_lock(&game.gridLock);
+                            loadExample(&game, e);
+                            pthread_mutex_unlock(&game.gridLock);
                             destroyExample(&e);
                             break;
                         case SDLK_5:
                             e = galaxy();
-                            pthread_mutex_lock(&gridLock);
-                            loadExample(grid, e);
-                            pthread_mutex_unlock(&gridLock);
+                            pthread_mutex_lock(&game.gridLock);
+                            loadExample(&game, e);
+                            pthread_mutex_unlock(&game.gridLock);
                             destroyExample(&e);
                             break;
 
@@ -168,7 +172,7 @@ int main(int argc, char* argv[]) {
                         case SDLK_LEFT:
                         case SDLK_DOWN:
                         case SDLK_RIGHT:
-                            pthread_mutex_lock(&gridLock);
+                            pthread_mutex_lock(&game.gridLock);
                             direction_t direction;
                             switch (event.key.keysym.sym) {
                                 case SDLK_UP: direction = DIRECTION_UP; break;
@@ -176,8 +180,8 @@ int main(int argc, char* argv[]) {
                                 case SDLK_DOWN: direction = DIRECTION_DOWN; break;
                                 case SDLK_RIGHT: direction = DIRECTION_RIGHT; break;
                             }
-                            shiftGrid(grid, direction);
-                            pthread_mutex_unlock(&gridLock);
+                            shiftGrid(game.grid, direction);
+                            pthread_mutex_unlock(&game.gridLock);
                             break;
 
                     } // END switch(event.key.keycode)
@@ -185,14 +189,12 @@ int main(int argc, char* argv[]) {
                 } // END switch(event.type)
         } // END while(SDL_Poll)
  
-        pthread_mutex_lock(&gridLock);
-        draw(renderer, grid, blockSize, mouseX, mouseY);
-        pthread_mutex_unlock(&gridLock);
+        draw(&game, mouseX, mouseY);
 
-        SDL_Delay(1000 / fps);
-    } // END while(running)
+        SDL_Delay(1000 / game.fps);
+    } // END while(game.running)
 
-    free(grid.cells);
+    free(game.grid.cells);
 
     return 0;
 }

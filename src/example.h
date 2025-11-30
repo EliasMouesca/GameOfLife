@@ -1,5 +1,5 @@
-#ifndef EXAMPLES_H
-#define EXAMPLES_H
+#ifndef EXAMPLE_H
+#define EXAMPLE_H
 
 #include "grid.h"
 
@@ -25,7 +25,6 @@ typedef struct {
     verticalPosition_t vpos;
 } example_t;
 
-void loadExample(grid_t grid, example_t example);
 void destroyExample(example_t* example);
 
 example_t nothing();

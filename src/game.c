@@ -1,7 +1,11 @@
 
 #include "game.h"
+#include "pthread.h"
 
-void update(grid_t grid) {
+void update(game_t* game) {
+    pthread_mutex_lock(&game->gridLock);
+    grid_t grid;
+    memcpy(&grid, &(game->grid), sizeof(grid_t));
     bool* buffer = (bool*) malloc(grid.rows * grid.cols * sizeof(bool));
 
     for (int y = 0; y < grid.rows; y++)
@@ -30,22 +34,30 @@ void update(grid_t grid) {
     }
 
     memcpy(grid.cells, buffer, grid.rows * grid.cols * sizeof(bool));
+    pthread_mutex_unlock(&game->gridLock);
 
     free(buffer);
 
     return;
 }
 
-void draw(SDL_Renderer* renderer, grid_t grid, int blockSize, Sint32 mouseX, Sint32 mouseY) {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xff);
-    SDL_RenderClear(renderer);
+void draw(game_t* game, Sint32 mouseX, Sint32 mouseY) {
+    int rows = game->grid.rows;
+    int cols = game->grid.cols;
+    int blockSize = game->blockSize;
+    SDL_SetRenderDrawColor(game->renderer, 0, 0, 0, 0xff);
+    SDL_RenderClear(game->renderer);
 
-    SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
-    for (int y = 0; y < grid.rows; y++)
-    for (int x = 0; x < grid.cols; x++)
-        if (grid.cells[y * grid.cols + x]) {
+    pthread_mutex_lock(&game->gridLock);
+    grid_t grid = makeGrid(rows, cols, (bool*) game->grid.cells);
+    pthread_mutex_unlock(&game->gridLock);
+
+    SDL_SetRenderDrawColor(game->renderer, 0xff, 0xff, 0xff, 0xff);
+    for (int y = 0; y < rows; y++)
+    for (int x = 0; x < cols; x++)
+        if (grid.cells[y * cols + x]) {
             SDL_Rect rect = {x * blockSize, y * blockSize, blockSize, blockSize};
-            SDL_RenderFillRect(renderer, &rect);
+            SDL_RenderFillRect(game->renderer, &rect);
         }
 
     if ( (mouseX > 0 && mouseX < grid.cols * blockSize) && 
@@ -55,53 +67,52 @@ void draw(SDL_Renderer* renderer, grid_t grid, int blockSize, Sint32 mouseX, Sin
         int y = mouseY - (mouseY % blockSize);
 
         SDL_Rect rect = {x, y, blockSize, blockSize};
-        SDL_SetRenderDrawColor(renderer, 0xaa, 0xaa, 0xaa, 0xff);
-        SDL_RenderFillRect(renderer, &rect);
+        SDL_SetRenderDrawColor(game->renderer, 0xaa, 0xaa, 0xaa, 0xff);
+        SDL_RenderFillRect(game->renderer, &rect);
     }
 
-    SDL_RenderPresent(renderer);
+    freeGrid(grid);
+
+    SDL_RenderPresent(game->renderer);
 
     return;
 
 }
 
-void shiftGrid(grid_t grid, direction_t direction) {
-    int dx, dy;
+void loadExample(game_t* game, example_t example) {
 
-    switch (direction) {
-        case DIRECTION_UP:
-            dx = 0, dy = 1;
-            break;
+    int cols = game->grid.cols;
+    int rows = game->grid.rows;
 
-        case DIRECTION_LEFT:
-            dx = 1, dy = 0;
-            break;
+    pthread_mutex_lock(&game->gridLock);
+    memset(game->grid.cells, false, cols * rows * sizeof(bool));
 
-        case DIRECTION_DOWN:
-            dx = 0, dy = -1;
-            break;
+    int startingX = 0;
+    int startingY = 0;
 
-        case DIRECTION_RIGHT:
-            dx = -1, dy = 0;
-            break;
-        default:
-            dx = 0, dy = 0;
-            break;
+    switch (example.hpos) {
+        case LEFT: startingX = 0; break;
+        case CENTER: startingX = cols / 2 - example.cols / 2; break;
+        case RIGHT: startingX = cols - example.cols; break;
     }
 
-    bool* buffer = (bool*) malloc(grid.rows * grid.cols * sizeof(bool));
-
-    for (int y = 0; y < grid.rows; y++)
-    for (int x = 0; x < grid.cols; x++) {
-        int newX = x + dx, newY = y + dy;
-        buffer[y * grid.cols + x] = ((newX >= 0 && newX < grid.cols) && (newY >= 0 && newY < grid.rows)) ? grid.cells[newY * grid.cols + newX] : false;
+    switch (example.vpos) {
+        case TOP: startingY = 0; break;
+        case MIDDLE: startingY = rows / 2 - example.rows / 2; break;
+        case BOTTOM: startingY = rows - example.rows; break;
     }
 
-    memcpy(grid.cells, buffer, grid.rows * grid.cols * sizeof(bool));
+    for (int y = 0; y < example.rows; y++)
+    for (int x = 0; x < example.cols; x++) {
+        if ( example.cells[y * example.cols + x] )
+            game->grid.cells[(startingY + y) * cols + startingX + x] = true;
+    }
 
-    free(buffer);
+    pthread_mutex_unlock(&game->gridLock);
 
     return;
+
 }
+
 
 

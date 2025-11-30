@@ -7,17 +7,26 @@
 
 #include "utils.h"
 #include "grid.h"
+#include "direction.h"
+#include "example.h"
 
-typedef enum {
-    DIRECTION_UP, 
-    DIRECTION_LEFT, 
-    DIRECTION_DOWN, 
-    DIRECTION_RIGHT,
-    DIRECTION_NONE
-} direction_t;
+typedef struct {
+    SDL_Renderer* renderer;
+    SDL_Window* window;
 
-void update(grid_t grid);
-void draw(SDL_Renderer* renderer, grid_t grid, int blockSize, Sint32 mouseX, Sint32 mouseY);
-void shiftGrid(grid_t grid, direction_t direction);
+    int blockSize;
+    int fps;
+    int delay;
+
+    pthread_mutex_t gridLock;
+    grid_t grid;
+    bool updating;
+    bool running;
+
+} game_t;
+
+void update(game_t* game);
+void draw(game_t* game, Sint32 mouseX, Sint32 mouseY);
+void loadExample(game_t* game, example_t example);
 
 #endif

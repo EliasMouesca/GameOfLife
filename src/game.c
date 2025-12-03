@@ -4,6 +4,11 @@
 #include "pthread.h"
 #include "log.h"
 
+#define DELAY_TINY_STEP 10
+#define DELAY_BIG_STEP 25
+#define DELAY_TOP_LIMIT 1000
+#define DELAY_BOTTOM_LIMIT 0
+
 void* gameUpdater(void* arg);
 
 game_t* createGame() {
@@ -170,11 +175,23 @@ void handleEvents(game_t* game, SDL_Event event) {
                 if (!game->updating) info("Game stopped");
                 else info("Game resumed");
                 break;
-            case SDLK_z:
-                game->updating = true;
+            case SDLK_MINUS:
+            case SDLK_KP_MINUS:
+                int step = DELAY_TINY_STEP;
+                if (event.key.keysym.mod & KMOD_CTRL)
+                    step = DELAY_BIG_STEP;
+
+                if (game->delay + step >= DELAY_TOP_LIMIT) warn("Not incrementing delay: must be lower than %d", DELAY_TOP_LIMIT);
+                else info("Incremented delay: %d ms ", game->delay += step);
                 break;
-            case SDLK_x:
-                game->updating = false;
+            case SDLK_PLUS:
+            case SDLK_KP_PLUS:
+                step = DELAY_TINY_STEP;
+                if (event.key.keysym.mod & KMOD_CTRL)
+                    step = DELAY_BIG_STEP;
+
+                if (game->delay - step <= DELAY_BOTTOM_LIMIT) warn("Not decrementing delay: must be higher than %d", DELAY_BOTTOM_LIMIT);
+                else info("Decremented delay: %d ms ", game->delay -= step);
                 break;
             case SDLK_n:
                 update(game);

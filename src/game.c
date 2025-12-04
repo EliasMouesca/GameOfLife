@@ -14,7 +14,7 @@ void* gameUpdater(void* arg);
 game_t* createGame() {
     game_t* game = malloc(sizeof(game_t));
     game->updating = false;
-    game->running= true;
+    game->running = true;
     pthread_mutex_init(&game->gridLock, NULL);
     pthread_create(&game->updaterThread, NULL, gameUpdater, game);
 
@@ -136,6 +136,8 @@ void* gameUpdater(void* arg) {
 }
 
 void handleEvents(game_t* game, graphic_context_t* gc, SDL_Event event) {
+    static int rightClickSelection = -1;
+
     switch (event.type) {
     case SDL_QUIT:
         game->running = false;
@@ -150,10 +152,21 @@ void handleEvents(game_t* game, graphic_context_t* gc, SDL_Event event) {
     case SDL_MOUSEBUTTONDOWN:
         int c = event.button.x / gc->blockSize;
         int r = event.button.y / gc->blockSize;
+        if (event.button.button == SDL_BUTTON_LEFT) rightClickSelection = r * game->grid.cols + c;
+        break;
 
-        pthread_mutex_lock(&game->gridLock);
-        game->grid.cells[r * game->grid.cols + c] = !game->grid.cells[r * game->grid.cols + c];
-        pthread_mutex_unlock(&game->gridLock);
+    case SDL_MOUSEBUTTONUP:
+        c = event.button.x / gc->blockSize;
+        r = event.button.y / gc->blockSize;
+
+        if (event.button.button == SDL_BUTTON_LEFT) {
+            if (rightClickSelection == (r * game->grid.cols + c)) {
+                pthread_mutex_lock(&game->gridLock);
+                game->grid.cells[r * game->grid.cols + c] = !game->grid.cells[r * game->grid.cols + c];
+                pthread_mutex_unlock(&game->gridLock);
+                rightClickSelection = -1;
+            }
+        }
 
         break;
 

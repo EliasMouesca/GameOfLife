@@ -10,13 +10,9 @@
 #include "grid.h"
 #include "direction.h"
 #include "example.h"
+#include "graphic_context.h"
 
 typedef struct {
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    int blockSize;
-    int fps;
-
     Sint32 mouseX;
     Sint32 mouseY;
 
@@ -32,8 +28,8 @@ typedef struct {
 game_t* createGame();
 void setGameConfig(game_t* game, config_t config);
 void update(game_t* game);
-void draw(game_t* game);
-void handleEvents(game_t* game, SDL_Event event);
+void draw(game_t* game, graphic_context_t* gc);
+void handleEvents(game_t* game, graphic_context_t* gc, SDL_Event event);
 void loadExample(game_t* game, example_t example);
 void destroyGame(game_t* game);
 

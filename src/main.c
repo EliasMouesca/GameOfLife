@@ -10,7 +10,6 @@
 #include "log.h"
 
 #define CONFIG_PATH_MAX_SIZE 256
-#define SDL_INIT_FLAGS SDL_INIT_VIDEO
 
 int main(int argc, char* argv[]) {
     info("Logging is active");
@@ -31,34 +30,22 @@ int main(int argc, char* argv[]) {
         die("Failed to open %s", configPath);
 
     game_t* game = createGame();
+    info("Game created");
+
     setGameConfig(game, config);
-    info("Loaded config '%s'", configPath);
+    info("Loaded game config '%s'", configPath);
 
-    if (SDL_Init(SDL_INIT_FLAGS) != 0)
-        die("Could not initialize SDL: %s", SDL_GetError());
-
-    int windowWidth = game->grid.cols * game->blockSize;
-    int windowHeight = game->grid.rows * game->blockSize;
-
-    game->window = SDL_CreateWindow("DEMO",
-            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-            windowWidth, windowHeight,
-            0);
-    if (game->window == NULL)
-        die("Could not create window: %s", SDL_GetError());
-
-    game->renderer = SDL_CreateRenderer(game->window, -1, 0);
-    if (game->renderer == NULL)
-        die("Could not create renderer: %s", SDL_GetError());
+    graphic_context_t* gc = createGraphicContext(config);
+    info("Graphic context created");
 
     while (game->running) {
         SDL_Event event;
 
-        while (SDL_PollEvent(&event)) handleEvents(game, event);
+        while (SDL_PollEvent(&event)) handleEvents(game, gc, event);
  
-        draw(game);
+        draw(game, gc);
 
-        SDL_Delay(1000 / game->fps);
+        SDL_Delay(1000 / gc->fps);
     }
 
     destroyGame(game);

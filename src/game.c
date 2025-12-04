@@ -12,7 +12,6 @@
 void* gameUpdater(void* arg);
 
 game_t* createGame() {
-    info("Creating game");
     game_t* game = malloc(sizeof(game_t));
     game->updating = false;
     game->running= true;
@@ -25,20 +24,14 @@ game_t* createGame() {
 void setGameConfig(game_t* game, config_t config) {
     const char* rowsStr = getValue(&config, "rows");
     const char* colsStr = getValue(&config, "cols");
-    const char* blockSizeStr = getValue(&config, "block_size");
-    const char* fpsStr = getValue(&config, "fps");
     const char* delayStr = getValue(&config, "delay");
 
     if (!rowsStr || rowsStr[0]=='\0') die("Could not parse 'rows' config parameter");
     if (!colsStr || colsStr[0]=='\0') die("Could not parse 'cols' config parameter");
-    if (!blockSizeStr || blockSizeStr[0]=='\0') die("Could not parse 'blockSize' config parameter");
-    if (!fpsStr || fpsStr[0]=='\0') die("Could not parse 'fps' config parameter");
     if (!delayStr || delayStr[0]=='\0') die("Could not parse 'delay' config parameter");
 
     int rows = game->grid.rows = atoi(rowsStr);
     int cols = game->grid.cols = atoi(colsStr);
-    game->blockSize = atoi(blockSizeStr);
-    game->fps = atoi(fpsStr);
     game->delay = atoi(delayStr);
 
     void* cells = game->grid.cells = malloc(rows * cols * sizeof(bool));
@@ -90,23 +83,23 @@ void update(game_t* game) {
     return;
 }
 
-void draw(game_t* game) {
+void draw(game_t* game, graphic_context_t* gc) {
     int rows = game->grid.rows;
     int cols = game->grid.cols;
-    int blockSize = game->blockSize;
-    SDL_SetRenderDrawColor(game->renderer, 0, 0, 0, 0xff);
-    SDL_RenderClear(game->renderer);
+    int blockSize = gc->blockSize;
+    SDL_SetRenderDrawColor(gc->renderer, 0, 0, 0, 0xff);
+    SDL_RenderClear(gc->renderer);
 
     pthread_mutex_lock(&game->gridLock);
     grid_t grid = makeGrid(rows, cols, (bool*) game->grid.cells);
     pthread_mutex_unlock(&game->gridLock);
 
-    SDL_SetRenderDrawColor(game->renderer, 0xff, 0xff, 0xff, 0xff);
+    SDL_SetRenderDrawColor(gc->renderer, 0xff, 0xff, 0xff, 0xff);
     for (int y = 0; y < rows; y++)
     for (int x = 0; x < cols; x++)
         if (grid.cells[y * cols + x]) {
             SDL_Rect rect = {x * blockSize, y * blockSize, blockSize, blockSize};
-            SDL_RenderFillRect(game->renderer, &rect);
+            SDL_RenderFillRect(gc->renderer, &rect);
         }
 
     if ( (game->mouseX > 0 && game->mouseX < grid.cols * blockSize) && 
@@ -116,13 +109,13 @@ void draw(game_t* game) {
         int y = game->mouseY - (game->mouseY % blockSize);
 
         SDL_Rect rect = {x, y, blockSize, blockSize};
-        SDL_SetRenderDrawColor(game->renderer, 0xaa, 0xaa, 0xaa, 0xff);
-        SDL_RenderFillRect(game->renderer, &rect);
+        SDL_SetRenderDrawColor(gc->renderer, 0xaa, 0xaa, 0xaa, 0xff);
+        SDL_RenderFillRect(gc->renderer, &rect);
     }
 
     freeGrid(grid);
 
-    SDL_RenderPresent(game->renderer);
+    SDL_RenderPresent(gc->renderer);
 
     return;
 
@@ -142,7 +135,7 @@ void* gameUpdater(void* arg) {
     return NULL;
 }
 
-void handleEvents(game_t* game, SDL_Event event) {
+void handleEvents(game_t* game, graphic_context_t* gc, SDL_Event event) {
     switch (event.type) {
     case SDL_QUIT:
         game->running = false;
@@ -155,8 +148,8 @@ void handleEvents(game_t* game, SDL_Event event) {
         break;
 
     case SDL_MOUSEBUTTONDOWN:
-        int c = event.button.x / game->blockSize;
-        int r = event.button.y / game->blockSize;
+        int c = event.button.x / gc->blockSize;
+        int r = event.button.y / gc->blockSize;
 
         pthread_mutex_lock(&game->gridLock);
         game->grid.cells[r * game->grid.cols + c] = !game->grid.cells[r * game->grid.cols + c];

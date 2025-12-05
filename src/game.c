@@ -1,7 +1,6 @@
 
 #include "game.h"
 
-#include "pthread.h"
 #include "log.h"
 
 #define DELAY_TINY_STEP 10
@@ -15,8 +14,8 @@ game_t* createGame() {
     game_t* game = malloc(sizeof(game_t));
     game->updating = false;
     game->running = true;
+    game->delay = 0;
     pthread_mutex_init(&game->gridLock, NULL);
-    pthread_create(&game->updaterThread, NULL, gameUpdater, game);
 
     return game;
 }
@@ -34,13 +33,40 @@ void setGameConfig(game_t* game, config_t config) {
     int cols = game->grid.cols = atoi(colsStr);
     game->delay = atoi(delayStr);
 
-    void* cells = game->grid.cells = malloc(rows * cols * sizeof(bool));
+    game->grid.cells = malloc(rows * cols * sizeof(bool));
 
+    memset(game->grid.cells, 0, rows * cols * sizeof(bool));
+
+}
+
+void beginUpdating(game_t* game) {
+    pthread_create(&game->updaterThread, NULL, gameUpdater, game);
+}
+
+void figureSensibleDefaults(game_t* game, graphic_context_t* gc) {
+    int blockSize = 15;
+    int fps = 60;
+    int delay = 100;
+
+    gc->blockSize = blockSize;
+    gc->fps = fps;
+    game->delay = delay;
+
+    SDL_DisplayMode DM;
+    SDL_GetCurrentDisplayMode(0, &DM);
+
+    int cols = (0.8 * DM.w) / blockSize;
+    int rows = (0.8 * DM.h) / blockSize;
+    int windowWidth = cols * blockSize;
+    int windowHeight = rows * blockSize;
+    int windowFlags = 0;
+
+    game->grid.rows = rows;
+    game->grid.cols = cols;
+    void* cells = game->grid.cells = malloc(rows * cols * sizeof(bool));
     memset(cells, 0, rows * cols * sizeof(bool));
 
-    example_t e = chaos();
-    loadExample(game, e);
-    destroyExample(&e);
+    setGraphicContextParams(gc, windowWidth, windowHeight, windowFlags, blockSize, fps);
 
 }
 

@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "utils.h"
 #include "config.h"
@@ -27,6 +28,8 @@ typedef struct {
 
 game_t* createGame();
 void setGameConfig(game_t* game, config_t config);
+void beginUpdating(game_t* game);
+void figureSensibleDefaults(game_t* game, graphic_context_t* gc);
 void update(game_t* game);
 void draw(game_t* game, graphic_context_t* gc);
 void handleEvents(game_t* game, graphic_context_t* gc, SDL_Event event);

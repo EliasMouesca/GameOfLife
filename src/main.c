@@ -14,6 +14,7 @@
 int main(int argc, char* argv[]) {
     info("Logging is active");
     config_t config;
+    bool useConfig = true;
 
     char configPath[CONFIG_PATH_MAX_SIZE] = {0};
 
@@ -23,20 +24,27 @@ int main(int argc, char* argv[]) {
             strncpy(configPath, argv[1], CONFIG_PATH_MAX_SIZE - 1);
         else
             die("Config path '%s' too large (max: %d characters)", argv[1], CONFIG_PATH_MAX_SIZE);
-    } else
-        strncpy(configPath, "config.txt", CONFIG_PATH_MAX_SIZE - 1);
+    } else useConfig = false;
         
-    if (parseConfig(configPath, &config) != 0)
-        die("Failed to open %s", configPath);
-
     game_t* game = createGame();
-    info("Game created");
+    debug("Game created");
+    graphic_context_t* gc = createGraphicContext();
+    debug("Graphic context created");
 
-    setGameConfig(game, config);
-    info("Loaded game config '%s'", configPath);
+    if (useConfig) {
+        if (parseConfig(configPath, &config) != 0) die("Failed to open %s", configPath);
+        setGameConfig(game, config);
+        debug("Loaded game config '%s'", configPath);
+        setGraphicContextConfig(gc, config);
+        debug("Loaded graphic context config '%s'", configPath);
 
-    graphic_context_t* gc = createGraphicContext(config);
-    info("Graphic context created");
+    } else figureSensibleDefaults(game, gc);
+    
+    example_t e = chaos();
+    loadExample(game, e);
+    destroyExample(&e);
+
+    beginUpdating(game);
 
     while (game->running) {
         SDL_Event event;

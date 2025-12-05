@@ -14,7 +14,8 @@ typedef struct {
 
 } graphic_context_t;
 
-graphic_context_t* createGraphicContext(config_t config);
+graphic_context_t* createGraphicContext();
+void setGraphicContextParams(graphic_context_t* gc, int windowWidth, int windowHeight, int windowFlags, int blockSize, int fps);
 void setGraphicContextConfig(graphic_context_t* gc, config_t config);
 void destroyGraphicContext(graphic_context_t** gc);
 

@@ -4,7 +4,7 @@
 #include "log.h"
 
 #define SDL_INIT_FLAGS SDL_INIT_VIDEO
-#define WINDOW_TITLE "DEMO"
+#define WINDOW_TITLE "Game of Life"
 
 graphic_context_t* createGraphicContext() {
     graphic_context_t* gc = (graphic_context_t*) malloc(sizeof(graphic_context_t));

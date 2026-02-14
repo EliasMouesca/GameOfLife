@@ -12,6 +12,7 @@ bool runTest(grid_t input, grid_t expected) {
     bool* input_copy = malloc(sizeof(bool) * input.rows * input.cols);
     memcpy(input_copy, input.cells, sizeof(bool) * input.rows * input.cols);
 
+    game_t* game = createGame();
     grid_t test_grid = { input_copy, input.rows, input.cols };
     update(test_grid);
 

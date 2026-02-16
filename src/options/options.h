@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "../parameters/parameters.h"
+
 void usage(const char* prog);
-void handleOptions(game_t* game, int argc, char* argv[]);
+parameters_t optionsToParameters();
 
 #endif

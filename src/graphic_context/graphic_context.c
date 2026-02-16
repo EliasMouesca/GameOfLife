@@ -9,10 +9,10 @@
 
 graphic_context_t* createGraphicContext() {
     graphic_context_t* gc = (graphic_context_t*) malloc(sizeof(graphic_context_t));
-    if (!gc) die("Not enough memory for graphic context allocation");
+    if (!gc) critical("Not enough memory for graphic context allocation");
 
     if (SDL_Init(SDL_INIT_FLAGS) != 0)
-        die("Could not initialize SDL: %s", SDL_GetError());
+        critical("Could not initialize SDL: %s", SDL_GetError());
 
     const int windowFlags = SDL_WINDOW_HIDDEN;
     gc->window = SDL_CreateWindow(WINDOW_TITLE,
@@ -20,11 +20,11 @@ graphic_context_t* createGraphicContext() {
         TEMPORARY_WIDTH, TEMPORARY_HEIGHT,      // Will be resized later
         windowFlags);
     if (gc->window == NULL)
-        die("Could not create window: %s", SDL_GetError());
+        critical("Could not create window: %s", SDL_GetError());
 
     gc->renderer = SDL_CreateRenderer(gc->window, -1, 0);
     if (gc->renderer == NULL)
-        die("Could not create renderer: %s", SDL_GetError());
+        critical("Could not create renderer: %s", SDL_GetError());
 
 
     gc->blockSize = 0;
@@ -35,11 +35,21 @@ graphic_context_t* createGraphicContext() {
 }
 
 void setGraphicContextParameters(graphic_context_t* gc, parameters_t params) {
-    int windowWidth = params.cols * params.blockSize;
-    int windowHeight = params.rows * params.blockSize;
+    if (!params.cols)
+        critical("Called setGraphicsContextParameters with 'cols' set to null");
+    if (!params.rows)
+        critical("Called setGraphicsContextParameters with 'rows' set to null");
+    if (!params.blockSize)
+        critical("Called setGraphicsContextParameters with 'blockSize' set to null");
+    if (!params.fps)
+        critical("Called setGraphicsContextParameters with 'fps' set to null");
 
-    gc->blockSize = params.blockSize;
-    gc->fps = params.fps;
+    int windowWidth = *params.cols * *params.blockSize;
+    int windowHeight = *params.rows * *params.blockSize;
+
+
+    gc->blockSize = *params.blockSize;
+    gc->fps = *params.fps;
 
     SDL_SetWindowSize(gc->window, windowWidth, windowHeight);
     SDL_ShowWindow(gc->window);

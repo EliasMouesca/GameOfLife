@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-void die(const char* fmt, ...);
+//void die(const char* fmt, ...);
 void trim(char* str);
 
 #endif

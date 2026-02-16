@@ -9,10 +9,9 @@
 #include "example/example.h"
 #include "log/log.h"
 #include "parameters/parameters.h"
+#include "options/options.h"
 
 #define CONFIG_PATH_MAX_SIZE 256
-
-parameters_t solveParameters();
 
 int main(int argc, char* argv[]) {
     info("Logging is active");
@@ -22,7 +21,14 @@ int main(int argc, char* argv[]) {
     graphic_context_t* gc = createGraphicContext();
     debug("Graphic context created");
 
-    parameters_t params = solveParameters();
+    // TODO: Obtener config, default y opts parameters
+    config_t config;
+
+    parameters_t defaultParameters = getDefaultParameters();
+    parameters_t configParameters = configToParameters(&config);
+    parameters_t optionsParameters = optionsToParameters();
+    
+    parameters_t params = solveParameters(defaultParameters, configParameters, optionsParameters);
     setGameParameters(game, params);
     setGraphicContextParameters(gc, params);
     
@@ -49,7 +55,7 @@ int main(int argc, char* argv[]) {
 
 
 // Some configurations come from files, others from sensible defaults and others from cli arguments
-parameters_t solveParameters() {
+parameters_t getParameters() {
     // TODO: Solve later
     /*
     config_t config;

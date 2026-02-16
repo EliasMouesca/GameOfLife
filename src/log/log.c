@@ -84,5 +84,6 @@ void critical(const char* fmt, ...) {
     va_start(args, fmt);
     log_wrapper(CRITICAL, fmt, args);
     va_end(args);
+    exit(1);
 }
 

@@ -35,21 +35,21 @@ graphic_context_t* createGraphicContext() {
 }
 
 void setGraphicContextParameters(graphic_context_t* gc, parameters_t params) {
-    if (!params.cols)
-        critical("Called setGraphicsContextParameters with 'cols' set to null");
-    if (!params.rows)
-        critical("Called setGraphicsContextParameters with 'rows' set to null");
-    if (!params.blockSize)
-        critical("Called setGraphicsContextParameters with 'blockSize' set to null");
-    if (!params.fps)
-        critical("Called setGraphicsContextParameters with 'fps' set to null");
+    if (!params.colsDefined)
+        critical("Called setGraphicsContextParameters with 'cols' not set");
+    if (!params.rowsDefined)
+        critical("Called setGraphicsContextParameters with 'rows' not set");
+    if (!params.blockSizeDefined)
+        critical("Called setGraphicsContextParameters with 'blockSize' not set");
+    if (!params.fpsDefined)
+        critical("Called setGraphicsContextParameters with 'fps' not set");
 
-    int windowWidth = *params.cols * *params.blockSize;
-    int windowHeight = *params.rows * *params.blockSize;
+    int windowWidth = params.cols * params.blockSize;
+    int windowHeight = params.rows * params.blockSize;
 
 
-    gc->blockSize = *params.blockSize;
-    gc->fps = *params.fps;
+    gc->blockSize = params.blockSize;
+    gc->fps = params.fps;
 
     SDL_SetWindowSize(gc->window, windowWidth, windowHeight);
     SDL_ShowWindow(gc->window);

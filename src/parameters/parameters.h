@@ -3,13 +3,12 @@
 
 #include <stdlib.h>
 
-// Null parameters are interpreted as if they were not set
 typedef struct {
-    int* rows;
-    int* cols;
-    int* blockSize;
-    int* fps;
-    int* delay;
+    int rows; bool rowsDefined;
+    int cols; bool colsDefined;
+    int blockSize; bool blockSizeDefined;
+    int fps; bool fpsDefined;
+    int delay; bool delayDefined;
 } parameters_t;
 
 parameters_t getNullParameters();

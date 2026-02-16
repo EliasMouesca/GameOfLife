@@ -36,7 +36,7 @@ int parseConfig(const char *filename, config_t *cfg) {
 }
 
 parameters_t configToParameters(config_t* config) {
-    return getDefaultParameters();
+    return getNullParameters();
 }
 
 const char* getValue(config_t *cfg, const char *key) {

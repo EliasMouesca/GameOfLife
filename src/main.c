@@ -26,11 +26,20 @@ int main(int argc, char* argv[]) {
 
     parameters_t defaultParameters = getDefaultParameters();
     parameters_t configParameters = configToParameters(&config);
-    parameters_t optionsParameters = optionsToParameters();
+    parameters_t optionsParameters = optionsToParameters(argc, argv);
     
     parameters_t params = solveParameters(defaultParameters, configParameters, optionsParameters);
+
+
     setGameParameters(game, params);
     setGraphicContextParameters(gc, params);
+
+    /*
+    freeParameters(&defaultParameters);
+    freeParameters(&configParameters);
+    freeParameters(&optionsParameters);
+    freeParameters(&params);
+    */
     
     example_t e = chaos();
     loadExample(game, e);

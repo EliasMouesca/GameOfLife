@@ -6,29 +6,74 @@
 #define DEFAULT_FPS 30
 #define DEFAULT_DELAY 100
 
-parameters_t getDefaultParameters() {
-    int* rows = malloc(sizeof(int));
-    *rows = DEFAULT_ROWS;
-    int* cols = malloc(sizeof(int));
-    *cols = DEFAULT_COLS;
-    int* blockSize = malloc(sizeof(int));
-    *blockSize = DEFAULT_BLOCK_SIZE;
-    int* fps = malloc(sizeof(int));
-    *fps = DEFAULT_FPS;
-    int* delay = malloc(sizeof(int));
-    *delay = DEFAULT_DELAY;
+static int chooseInt(bool *defined, int a, bool aDef, int b, bool bDef, int c, bool cDef);
 
-    parameters_t p = {.rows=rows, .cols=cols, .blockSize=blockSize, .fps=fps, .delay=delay};
+parameters_t getDefaultParameters(void) {
+    return (parameters_t){
+        .rows = DEFAULT_ROWS,
+        .rowsDefined = true,
 
-    return p;
+        .cols = DEFAULT_COLS,
+        .colsDefined = true,
+
+        .blockSize = DEFAULT_BLOCK_SIZE,
+        .blockSizeDefined = true,
+
+        .fps = DEFAULT_FPS,
+        .fpsDefined = true,
+
+        .delay = DEFAULT_DELAY,
+        .delayDefined = true,
+    };
+}
+
+parameters_t getNullParameters(void) {
+    return (parameters_t){0};
 }
 
 parameters_t solveParameters(parameters_t defaultParams, parameters_t configParams, parameters_t optionsParams) {
-    return getDefaultParameters();
-}
+    parameters_t p = getNullParameters();
 
-parameters_t getNullParameters() {
-    parameters_t p ={.rows=NULL, .cols=NULL, .blockSize=NULL, .fps=NULL, .delay=NULL};
+    p.rows = chooseInt(&p.rowsDefined,
+                   defaultParams.rows,  defaultParams.rowsDefined,
+                   configParams.rows,   configParams.rowsDefined,
+                   optionsParams.rows,  optionsParams.rowsDefined);
+
+    p.cols = chooseInt(&p.colsDefined,
+                   defaultParams.cols,  defaultParams.colsDefined,
+                   configParams.cols,   configParams.colsDefined,
+                   optionsParams.cols,  optionsParams.colsDefined);
+
+    p.blockSize = chooseInt(&p.blockSizeDefined,
+                        defaultParams.blockSize, defaultParams.blockSizeDefined,
+                        configParams.blockSize,  configParams.blockSizeDefined,
+                        optionsParams.blockSize, optionsParams.blockSizeDefined);
+
+    p.fps = chooseInt(&p.fpsDefined,
+                  defaultParams.fps,  defaultParams.fpsDefined,
+                  configParams.fps,   configParams.fpsDefined,
+                  optionsParams.fps,  optionsParams.fpsDefined);
+
+    p.delay = chooseInt(&p.delayDefined,
+                    defaultParams.delay,  defaultParams.delayDefined,
+                    configParams.delay,   configParams.delayDefined,
+                    optionsParams.delay,  optionsParams.delayDefined);
+
+
     return p;
 }
+
+
+static int chooseInt(bool *defined,
+                     int a, bool aDef,
+                     int b, bool bDef,
+                     int c, bool cDef)
+{
+    if (cDef) { *defined = true; return c; }
+    if (bDef) { *defined = true; return b; }
+    if (aDef) { *defined = true; return a; }
+    *defined = false;
+    return 0;
+}
+
 

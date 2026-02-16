@@ -30,36 +30,17 @@ static const char* level_colors[] = {
 
 static const char* reset = "\033[0m";
 
-void log_msg(log_level_t level, const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-
-    time_t t = time(NULL);
-    struct tm* tm = localtime(&t);
-
-    fprintf(stderr, "%s[%02d:%02d:%02d] %-8s ",
-            level_colors[level],
-            tm->tm_hour, tm->tm_min, tm->tm_sec,
-            level_names[level]);
-
-    vfprintf(stderr, fmt, args);
-
-    fprintf(stderr, "%s\n", reset);
-
-    va_end(args);
-}
-
 static void log_wrapper(log_level_t level, const char* fmt, va_list args) {
     time_t t = time(NULL);
     struct tm* tm = localtime(&t);
 
-    fprintf(stderr, "%s[%02d:%02d:%02d] %-8s ",
-            level_colors[level],
+    fprintf(stderr, "[%02d:%02d:%02d]%s %-8s %s",
             tm->tm_hour, tm->tm_min, tm->tm_sec,
-            level_names[level]);
+            level_colors[level],
+            level_names[level],
+            reset);
 
     vfprintf(stderr, fmt, args);
-
     fprintf(stderr, "%s\n", reset);
 }
 

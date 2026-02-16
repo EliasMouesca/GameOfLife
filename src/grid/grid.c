@@ -13,6 +13,14 @@ grid_t makeGrid(int rows, int cols, bool* init) {
     return g;
 }
 
+void initializeGrid(grid_t* grid) {
+    grid->cells = NULL;
+    grid->rows = 0;
+    grid->cols = 0;
+
+    return;
+}
+
 void shiftGrid(grid_t grid, direction_t direction) {
     int dx, dy;
 

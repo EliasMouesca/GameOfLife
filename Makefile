@@ -2,7 +2,9 @@
 CC      := gcc
 CFLAGS  := -ggdb -Wall -Wextra -O2 -Iinclude
 LDFLAGS := $(shell sdl2-config --libs)
+VALGRINDFLAGS := --tool=memcheck --leak-check=yes --track-origins=yes --num-callers=12 -s --quiet
 
+PWD := $(shell pwd)
 SRC_DIR := src
 OBJ_DIR := obj
 TARGET  := game
@@ -42,7 +44,7 @@ define build_test_rule
 test-$1: $(MODULES_OBJS) $(OBJ_DIR)/$1/$1_test.o
 	$(CC) $$^ $(LDFLAGS) -o $$@
 	@printf "\n=== $1 test ===\n"
-	./$$@
+	valgrind $(VALGRINDFLAGS) $(PWD)/$$@
 	@printf "===============\n\n"
 	rm $$@
 endef

@@ -27,6 +27,8 @@ int main() {
 
     puts("Passed!");
 
+    free(config);
+
     return 0;
 }
 

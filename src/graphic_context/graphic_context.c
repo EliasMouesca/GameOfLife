@@ -11,18 +11,17 @@ graphic_context_t* createGraphicContext() {
     graphic_context_t* gc = (graphic_context_t*) malloc(sizeof(graphic_context_t));
     if (!gc) critical("Not enough memory for graphic context allocation");
 
-    if (SDL_Init(SDL_INIT_FLAGS) != 0)
+    if (!SDL_Init(SDL_INIT_FLAGS))
         critical("Could not initialize SDL: %s", SDL_GetError());
 
     const int windowFlags = SDL_WINDOW_HIDDEN;
     gc->window = SDL_CreateWindow(WINDOW_TITLE,
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         TEMPORARY_WIDTH, TEMPORARY_HEIGHT,      // Will be resized later
         windowFlags);
     if (gc->window == NULL)
         critical("Could not create window: %s", SDL_GetError());
 
-    gc->renderer = SDL_CreateRenderer(gc->window, -1, 0);
+    gc->renderer = SDL_CreateRenderer(gc->window, NULL);
     if (gc->renderer == NULL)
         critical("Could not create renderer: %s", SDL_GetError());
 
@@ -74,6 +73,7 @@ void destroyGraphicContext(graphic_context_t** gcp) {
     free(gc);
     *gcp = NULL;
 
+    SDL_Quit();
 }
 
 

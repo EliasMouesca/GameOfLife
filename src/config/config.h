@@ -23,7 +23,7 @@ config_t* createConfig();
 int parseConfig(char *filename, config_t *cfg);
 parameters_t configToParameters(config_t* config);
 void chooseAndOpenConfig(int argc, char* argv[], config_t *config);
-const char* getValue(config_t *cfg, const char *key);
+char* getValue(config_t *cfg, const char *key);
 void destroyConfig(config_t** config);
 
 

@@ -51,7 +51,6 @@ char* chooseConfigFile(int argc, char* argv[]) {
     optind = 1;
     while (getopt_long(argc, argv, GETOPT_STRING, long_opts, NULL) != -1);
 
-    bool useConfig = true;
     char* configPath = malloc(sizeof(char) * CONFIG_PATH_MAX_SIZE);
 
     if (optind < argc) {
@@ -131,7 +130,7 @@ parameters_t configToParameters(config_t* config) {
     return params;
 }
 
-const char* getValue(config_t *cfg, const char *key) {
+char* getValue(config_t *cfg, const char *key) {
     for (int i = 0; i < cfg->count; i++) {
         if (strcmp(cfg->entries[i].key, key) == 0)
             return cfg->entries[i].value;

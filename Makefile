@@ -1,7 +1,7 @@
 # FLAGS
 CC      := gcc
-CFLAGS  := -ggdb -Wall -Wextra -O2 -Iinclude
-LDFLAGS := $(shell sdl2-config --libs)
+CFLAGS  := -ggdb -Wall -Wextra -O2 -Iinclude $(shell pkg-config --cflags sdl3)
+LDFLAGS := $(shell pkg-config --libs sdl3)
 VALGRINDFLAGS := --tool=memcheck --leak-check=yes --track-origins=yes --num-callers=12 -s --quiet
 
 PWD := $(shell pwd)

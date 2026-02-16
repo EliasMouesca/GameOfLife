@@ -1,7 +1,7 @@
 #ifndef GRAPHIC_CONTEXT_H
 #define GRAPHIC_CONTEXT_H
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 #include "../utils/utils.h"
 #include "../config/config.h"

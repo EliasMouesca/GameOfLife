@@ -53,7 +53,7 @@ parameters_t optionsToParameters(int argc, char* argv[]) {
 }
 
 void usage(const char* prog) {
-    printf("\nhallo\n");
+    printf("\n%s: hallo\n", prog);
     return;
 }
 

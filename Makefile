@@ -44,7 +44,7 @@ define build_test_rule
 test-$1: $(MODULES_OBJS) $(OBJ_DIR)/$1/$1_test.o
 	$(CC) $$^ $(LDFLAGS) -o $$@
 	@printf "\n=== $1 test ===\n"
-	valgrind $(VALGRINDFLAGS) $(PWD)/$$@
+	valgrind $(VALGRINDFLAGS) $(PWD)/$$@ && printf "\nPassed!\n"
 	@printf "===============\n\n"
 	rm $$@
 endef

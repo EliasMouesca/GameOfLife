@@ -25,8 +25,6 @@ int main() {
     const char* delay = getValue(config, "delay");
     assert(strcmp(delay, "100") == 0);
 
-    puts("Passed!");
-
     free(config);
 
     return 0;

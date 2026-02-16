@@ -1,8 +1,6 @@
 
 #include "graphic_context.h"
 
-#include "log.h"
-
 #define SDL_INIT_FLAGS SDL_INIT_VIDEO
 #define WINDOW_TITLE "Game of Life"
 

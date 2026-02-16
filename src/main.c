@@ -2,12 +2,12 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "utils.h"
-#include "game.h"
-#include "grid.h"
-#include "config.h"
-#include "example.h"
-#include "log.h"
+#include "utils/utils.h"
+#include "game/game.h"
+#include "grid/grid.h"
+#include "config/config.h"
+#include "example/example.h"
+#include "log/log.h"
 
 #define CONFIG_PATH_MAX_SIZE 256
 

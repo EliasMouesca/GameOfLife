@@ -4,7 +4,6 @@
 #include <ctype.h>
 
 #include "config.h"
-#include "utils.h"
 
 #define MAX_LINE 256
 #define MAX_KEYS 100

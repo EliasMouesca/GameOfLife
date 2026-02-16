@@ -1,9 +1,9 @@
 #ifndef EXAMPLE_H
 #define EXAMPLE_H
 
-#include "grid.h"
-
 #include <stdbool.h>
+
+#include "../grid/grid.h"
 
 typedef enum {
     LEFT,

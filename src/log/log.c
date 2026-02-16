@@ -1,8 +1,5 @@
 #include "log.h"
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <time.h>
 
 typedef enum {
     TRACE,

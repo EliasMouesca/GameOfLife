@@ -4,6 +4,8 @@
 #define MAX_LINE 256
 #define MAX_KEYS 100
 
+#include "../utils/utils.h"
+
 typedef struct {
     char key[50];
     char value[100];

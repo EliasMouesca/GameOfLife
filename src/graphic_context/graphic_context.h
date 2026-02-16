@@ -3,8 +3,9 @@
 
 #include <SDL2/SDL.h>
 
-#include "utils.h"
-#include "config.h"
+#include "../utils/utils.h"
+#include "../config/config.h"
+#include "../log/log.h"
 
 typedef struct {
     SDL_Window* window;

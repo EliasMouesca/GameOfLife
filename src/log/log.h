@@ -2,6 +2,9 @@
 #define LOG_H
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <time.h>
 
 void trace(const char* fmt, ...);
 void debug(const char* fmt, ...);

@@ -1,6 +1,6 @@
 # Compiler and flags
-CC      := gcc -ggdb
-CFLAGS  := -Wall -Wextra -O2 -Iinclude
+CC      := gcc
+CFLAGS  := -ggdb -Wall -Wextra -O2 -Iinclude
 LDFLAGS := $(shell sdl2-config --libs)
 
 # Project structure
@@ -8,42 +8,35 @@ SRC_DIR := src
 OBJ_DIR := obj
 TARGET  := game
 
-# Collect all .c files in src/
-SRCS := $(wildcard $(SRC_DIR)/*.c)
-MAIN_SRCS := $(filter-out $(SRC_DIR)/test.c, $(SRCS))
-# Replace src/file.c -> obj/file.o
-OBJS := $(MAIN_SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+# Collect ALL .c files recursively
+SRCS := $(shell find $(SRC_DIR) -name '*.c')
 
-# Default target
+# Exclude test.c (anywhere)
+MAIN_SRCS := $(filter-out $(SRC_DIR)/test.c,$(SRCS))
+
+# Map src/path/file.c -> obj/path/file.o
+OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(MAIN_SRCS))
+
 all: $(TARGET)
 
-# Linking
 $(TARGET): $(OBJS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $@
 
-# Compilation rule: obj/file.o from src/file.c
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+# Compile rule with mirrored subdirs
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
-
-# Create directories if they don't exist
-$(OBJ_DIR):
-	mkdir -p $@
 
 # ----------------
 # Test build
 # ----------------
-# All sources except main.c
-TEST_SRCS := $(filter-out $(SRC_DIR)/main.c, $(SRCS))
-# Convert to objects in obj/
-TEST_OBJS := $(TEST_SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+TEST_SRCS := $(filter-out $(SRC_DIR)/main.c,$(SRCS))
+TEST_OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(TEST_SRCS))
 
-test: $(TEST_OBJS) | $(OBJ_DIR)
-	$(CC) $(CFLAGS) $(TEST_OBJS) -o $@ $(LDFLAGS)
+test: $(TEST_OBJS)
+	$(CC) $(TEST_OBJS) $(LDFLAGS) -o $@
 	./$@
 
-# ----------------
-# Clean
-# ----------------
 clean:
 	rm -rf $(OBJ_DIR) $(TARGET) test
 

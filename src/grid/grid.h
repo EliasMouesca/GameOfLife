@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "direction.h"
+#include "../types/direction.h"
 
 typedef struct {
     bool* cells;

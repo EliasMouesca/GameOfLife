@@ -21,11 +21,13 @@ int main(int argc, char* argv[]) {
     graphic_context_t* gc = createGraphicContext();
     debug("Graphic context created");
 
-    // TODO: Obtener config, default y opts parameters
-    config_t config;
+    config_t* config = createConfig();
+    debug("Config created");
+    chooseAndOpenConfig(argc, argv, config);
 
     parameters_t defaultParameters = getDefaultParameters();
-    parameters_t configParameters = configToParameters(&config);
+    parameters_t configParameters = configToParameters(config);
+    destroyConfig(&config);
     parameters_t optionsParameters = optionsToParameters(argc, argv);
     
     parameters_t params = solveParameters(defaultParameters, configParameters, optionsParameters);
@@ -34,13 +36,6 @@ int main(int argc, char* argv[]) {
     setGameParameters(game, params);
     setGraphicContextParameters(gc, params);
 
-    /*
-    freeParameters(&defaultParameters);
-    freeParameters(&configParameters);
-    freeParameters(&optionsParameters);
-    freeParameters(&params);
-    */
-    
     example_t e = chaos();
     loadExample(game, e);
     destroyExample(&e);
@@ -62,37 +57,3 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-
-// Some configurations come from files, others from sensible defaults and others from cli arguments
-parameters_t getParameters() {
-    // TODO: Solve later
-    /*
-    config_t config;
-    bool useConfig = true;
-
-    char configPath[CONFIG_PATH_MAX_SIZE] = {0};
-
-    if (argc >= 2) {
-        size_t size = strlen(argv[1]);
-        if (size < CONFIG_PATH_MAX_SIZE)
-            strncpy(configPath, argv[1], CONFIG_PATH_MAX_SIZE - 1);
-        else
-            die("Config path '%s' too large (max: %d characters)", argv[1], CONFIG_PATH_MAX_SIZE);
-    } else useConfig = false;
-
-    if (useConfig) {
-        if (parseConfig(configPath, &config) != 0) die("Failed to open %s", configPath);
-        //setGameConfig(game, config);
-        debug("Loaded game config '%s'", configPath);
-        setGraphicContextConfig(gc, config);
-        debug("Loaded graphic context config '%s'", configPath);
-
-    } else {
-        info("No config file found, figuring out defaults");
-        figureSensibleDefaults(game, gc);
-    }
-    */
-
-    return getDefaultParameters();
-
-}

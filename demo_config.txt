@@ -1,0 +1,5 @@
+rows=35
+cols=50
+block_size=20
+fps=30
+delay=100

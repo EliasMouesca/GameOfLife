@@ -14,8 +14,9 @@ parameters_t optionsToParameters(int argc, char* argv[]) {
     };
 
 
+    optind = 1;
     int opt;
-    while ((opt = getopt_long(argc, argv, "r:c:b:f:d:h", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, GETOPT_STRING, long_opts, NULL)) != -1) {
         switch (opt) {
             case 'r':
                 params.rowsDefined = true;

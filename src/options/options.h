@@ -9,6 +9,8 @@
 #include "../parameters/parameters.h"
 #include "../log/log.h"
 
+#define GETOPT_STRING "r:c:b:f:d:h"
+
 void usage(const char* prog);
 parameters_t optionsToParameters(int argc, char* argv[]);
 

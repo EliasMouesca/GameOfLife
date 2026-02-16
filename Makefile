@@ -1,44 +1,49 @@
-# Compiler and flags
+# FLAGS
 CC      := gcc
 CFLAGS  := -ggdb -Wall -Wextra -O2 -Iinclude
 LDFLAGS := $(shell sdl2-config --libs)
 
-# Project structure
 SRC_DIR := src
 OBJ_DIR := obj
 TARGET  := game
 
-# Collect ALL .c files recursively
 SRCS := $(shell find $(SRC_DIR) -name '*.c')
+MODULES_SRCS := $(filter-out %_test.c $(SRC_DIR)/main.c,$(SRCS))
+MODULES := $(sort $(patsubst $(SRC_DIR)/%/,%,$(dir $(MODULES_SRCS))))
+MAIN_SRC := $(SRC_DIR)/main.c
 
-# Exclude test.c (anywhere)
-MAIN_SRCS := $(filter-out $(SRC_DIR)/test.c,$(SRCS))
-
-# Map src/path/file.c -> obj/path/file.o
-OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(MAIN_SRCS))
+MODULES_OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(MODULES_SRCS))
+MAIN_OBJ := $(OBJ_DIR)/main.o
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-	$(CC) $(OBJS) $(LDFLAGS) -o $@
+$(TARGET): $(MODULES_OBJS) $(MAIN_OBJ)
+	$(CC) $(MODULES_OBJS) $(MAIN_OBJ) $(LDFLAGS) -o $@ && printf "\nCompilation successful!\n\n"
 
-# Compile rule with mirrored subdirs
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# ----------------
-# Test build
-# ----------------
-TEST_SRCS := $(filter-out $(SRC_DIR)/main.c,$(SRCS))
+TEST_SRCS := $(filter %_test.c,$(SRCS))
 TEST_OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(TEST_SRCS))
 
-test: $(TEST_OBJS)
-	$(CC) $(TEST_OBJS) $(LDFLAGS) -o $@
-	./$@
+test: $(TEST_OBJS) $(OBJS)
+	$(CC) $(TEST_OBJS) $(OBJS) $(LDFLAGS) -o $@
+	#./$@
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET) test
+	rm -rf $(OBJ_DIR) $(TARGET) test test-*
 
-.PHONY: all clean test
+.PHONY: all clean test test-*
 
+
+# Magia rara porque make no deja usar dos veces la wildcard (%)
+define build_test_rule
+test-$1: $(MODULES_OBJS) $(OBJ_DIR)/$1/$1_test.o
+	$(CC) $$^ $(LDFLAGS) -o $$@
+	@printf "\n=== $1 test ===\n"
+	./$$@
+	@printf "===============\n\n"
+	rm $$@
+endef
+$(foreach f,$(MODULES),$(eval $(call build_test_rule,$f)))

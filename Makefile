@@ -12,6 +12,7 @@ TARGET  := game
 SRCS := $(shell find $(SRC_DIR) -name '*.c')
 MODULES_SRCS := $(filter-out %_test.c $(SRC_DIR)/main.c,$(SRCS))
 MODULES := $(sort $(patsubst $(SRC_DIR)/%/,%,$(dir $(MODULES_SRCS))))
+TESTS := $(patsubst %,test-%,$(MODULES))
 MAIN_SRC := $(SRC_DIR)/main.c
 
 MODULES_OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(MODULES_SRCS))
@@ -29,9 +30,8 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 TEST_SRCS := $(filter %_test.c,$(SRCS))
 TEST_OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(TEST_SRCS))
 
-test: $(TEST_OBJS) $(OBJS)
-	$(CC) $(TEST_OBJS) $(OBJS) $(LDFLAGS) -o $@
-	#./$@
+test: $(TESTS)
+
 
 clean:
 	rm -rf $(OBJ_DIR) $(TARGET) test test-*

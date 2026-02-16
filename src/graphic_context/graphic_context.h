@@ -6,6 +6,7 @@
 #include "../utils/utils.h"
 #include "../config/config.h"
 #include "../log/log.h"
+#include "../parameters/parameters.h"
 
 typedef struct {
     SDL_Window* window;
@@ -16,8 +17,7 @@ typedef struct {
 } graphic_context_t;
 
 graphic_context_t* createGraphicContext();
-void setGraphicContextParams(graphic_context_t* gc, int windowWidth, int windowHeight, int windowFlags, int blockSize, int fps);
-void setGraphicContextConfig(graphic_context_t* gc, config_t config);
+void setGraphicContextParameters(graphic_context_t* gc, parameters_t params);
 void destroyGraphicContext(graphic_context_t** gc);
 
 #endif

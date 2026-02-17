@@ -53,8 +53,36 @@ parameters_t optionsToParameters(int argc, char* argv[]) {
 }
 
 void usage(const char* prog) {
-    printf("\n%s: hallo\n", prog);
-    return;
+    printf(
+"Game of Life (SDL3) — Conway cellular automaton\n\n"
+"Usage:\n"
+"  %s [options] [config-file]\n\n"
+"Options:\n"
+"  -r, --rows <n>          Grid rows\n"
+"  -c, --cols <n>          Grid columns\n"
+"  -b, --block-size <px>   Cell size in pixels\n"
+"  -f, --fps <n>           Frames per second\n"
+"  -d, --delay <ms>        Simulation delay (milliseconds)\n"
+"  -h, --help              Show this help and exit\n\n"
+"Config file:\n"
+"  If a positional argument is provided, it is treated as a config file.\n"
+"  CLI options override config values.\n\n"
+"Examples:\n"
+"  %s\n"
+"      Run with defaults.\n\n"
+"  %s config.cfg\n"
+"      Load parameters from config.cfg.\n\n"
+"  %s --rows 80 --cols 120 --block-size 8\n"
+"      Override grid size and cell size.\n\n"
+"  %s -d 50 -f 60\n"
+"      Faster simulation with smoother rendering.\n\n"
+"Notes:\n"
+"  • Arrow keys move the grid.\n"
+"  • Click to toggle cells.\n"
+"  • Space pauses/resumes simulation.\n"
+"  • +/- adjust simulation speed (Ctrl for larger step).\n",
+        prog, prog, prog, prog, prog
+    );
 }
 
 

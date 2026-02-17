@@ -1,6 +1,2 @@
-- Migrar a SDL3
-- Implementar getops
 - Guardar algunos estados anteriores y dibujar esos tmb en un grisesito
-- Que calcule los valores de la config dinamicamente si no están definidos
-- Agregar un help que explique las configuraciones posibles
 - Colores configurables

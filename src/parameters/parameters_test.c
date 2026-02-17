@@ -58,9 +58,7 @@ static parameters_t params_only_fullscreen(bool fs) {
     return p;
 }
 
-// ---- New helper: "base defaults are always fully-defined" contract ----
 static void assert_base_defaults_fully_defined(parameters_t p) {
-    // El contrato fuerte: los "base defaults" tienen TODO definido.
     ASSERT_TRUE(p.rowsDefined);
     ASSERT_TRUE(p.colsDefined);
     ASSERT_TRUE(p.blockSizeDefined);
@@ -68,12 +66,9 @@ static void assert_base_defaults_fully_defined(parameters_t p) {
     ASSERT_TRUE(p.delayDefined);
     ASSERT_TRUE(p.fullscreenDefined);
 
-    // Y además: areAllParametersSet debe devolver true (y no tocar buffer si existe)
     char buf[64];
     memset(buf, 0xAB, sizeof(buf));
     ASSERT_TRUE(areAllParametersSet(p, buf));
-    // Si devolvió true, no debería haber escrito un nombre de parámetro faltante.
-    // (No es un contrato explícito de la función, pero es un buen "canary".)
     ASSERT_TRUE(buf[0] == (char)0xAB);
 }
 
@@ -88,14 +83,11 @@ static void test_getNullParameters_all_undefined() {
     ASSERT_FALSE(p.fullscreenDefined);
 }
 
-// ---- Base defaults: full contract + values ----
 static void test_getBaseDefaultParameters_all_defined_and_valid() {
     parameters_t p = getBaseDefaultParameters();
 
-    // Contrato: TODO definido siempre.
     assert_base_defaults_fully_defined(p);
 
-    // Valores hardcodeados en el .c
     ASSERT_EQ_INT(p.rows, 70);
     ASSERT_EQ_INT(p.cols, 100);
     ASSERT_EQ_INT(p.blockSize, 17);
@@ -103,7 +95,6 @@ static void test_getBaseDefaultParameters_all_defined_and_valid() {
     ASSERT_EQ_INT(p.delay, 100);
     ASSERT_EQ_BOOL(p.fullscreen, false);
 
-    // Invariantes mínimas razonables
     ASSERT_TRUE(p.rows > 0);
     ASSERT_TRUE(p.cols > 0);
     ASSERT_TRUE(p.blockSize > 0);
@@ -115,7 +106,6 @@ static void test_getBaseDefaultParameters_is_stable_across_calls() {
     parameters_t a = getBaseDefaultParameters();
     parameters_t b = getBaseDefaultParameters();
 
-    // Si esto falla, alguien está metiendo estado global raro.
     ASSERT_EQ_INT(a.rows, b.rows);
     ASSERT_EQ_INT(a.cols, b.cols);
     ASSERT_EQ_INT(a.blockSize, b.blockSize);
@@ -135,9 +125,6 @@ static void test_getSensibleDefaultParameters_sets_defined_and_calculates() {
     int screenW = 1920;
     int screenH = 1080;
 
-    // blockSize = 1080 / 85 = 12 (int)
-    // rows = (1080/12) * 8/10 = 90*8/10 = 72
-    // cols = (1920/12) * 8/10 = 160*8/10 = 128
     parameters_t p = getSensibleDefaultParameters(screenW, screenH);
 
     ASSERT_TRUE(p.rowsDefined);
@@ -151,12 +138,10 @@ static void test_getSensibleDefaultParameters_sets_defined_and_calculates() {
     ASSERT_EQ_INT(p.rows, 72);
     ASSERT_EQ_INT(p.cols, 128);
 
-    // Los defaults restantes
     ASSERT_EQ_INT(p.fps, 30);
     ASSERT_EQ_INT(p.delay, 100);
     ASSERT_EQ_BOOL(p.fullscreen, false);
 
-    // Invariantes mínimas
     ASSERT_TRUE(p.rows > 0);
     ASSERT_TRUE(p.cols > 0);
     ASSERT_TRUE(p.blockSize > 0);
@@ -167,7 +152,7 @@ static void test_areAllParametersSet_false_reports_first_missing_in_order() {
 
     parameters_t p = params_null();
     ASSERT_FALSE(areAllParametersSet(p, buf));
-    ASSERT_STREQ(buf, "cols"); // el primero que chequea
+    ASSERT_STREQ(buf, "cols");
 
     p = params_only_cols(10);
     ASSERT_FALSE(areAllParametersSet(p, buf));
@@ -200,67 +185,65 @@ static void test_areAllParametersSet_true_accepts_null_buffer() {
 }
 
 static void test_solveParameters_precedence_options_over_config_over_default_ints() {
+    int w = 1920, h = 1080;
+
     parameters_t def = getBaseDefaultParameters();
-    assert_base_defaults_fully_defined(def); // <- reforzamos el contrato acá también
+    assert_base_defaults_fully_defined(def);
 
     parameters_t cfg = params_null();
     parameters_t opt = params_null();
 
-    // rows: solo default
-    parameters_t r = solveParameters(def, cfg, opt);
-    ASSERT_EQ_INT(r.rows, def.rows);
+    parameters_t r = solveParameters(def, cfg, opt, w, h);
     ASSERT_TRUE(r.rowsDefined);
+    ASSERT_EQ_INT(r.rows, def.rows);
 
-    // rows: config pisa default
     cfg = params_only_rows(111);
-    r = solveParameters(def, cfg, opt);
+    r = solveParameters(def, cfg, opt, w, h);
     ASSERT_EQ_INT(r.rows, 111);
 
-    // rows: options pisa config
     opt = params_only_rows(222);
-    r = solveParameters(def, cfg, opt);
+    r = solveParameters(def, cfg, opt, w, h);
     ASSERT_EQ_INT(r.rows, 222);
 
-    // cols: probamos lo mismo
     cfg = params_only_cols(333);
     opt = params_null();
-    r = solveParameters(def, cfg, opt);
+    r = solveParameters(def, cfg, opt, w, h);
     ASSERT_EQ_INT(r.cols, 333);
 
     opt = params_only_cols(444);
-    r = solveParameters(def, cfg, opt);
+    r = solveParameters(def, cfg, opt, w, h);
     ASSERT_EQ_INT(r.cols, 444);
 }
 
 static void test_solveParameters_precedence_bool() {
-    parameters_t def = getBaseDefaultParameters(); // fullscreen default false
+    int w = 1920, h = 1080;
+
+    parameters_t def = getBaseDefaultParameters();
     assert_base_defaults_fully_defined(def);
 
-    parameters_t cfg = params_null();
+    parameters_t cfg = params_only_fullscreen(true);
     parameters_t opt = params_null();
 
-    // config true -> true
-    cfg = params_only_fullscreen(true);
-    parameters_t r = solveParameters(def, cfg, opt);
+    parameters_t r = solveParameters(def, cfg, opt, w, h);
     ASSERT_TRUE(r.fullscreenDefined);
     ASSERT_EQ_BOOL(r.fullscreen, true);
 
-    // options false -> false (pisa config true)
     opt = params_only_fullscreen(false);
-    r = solveParameters(def, cfg, opt);
+    r = solveParameters(def, cfg, opt, w, h);
     ASSERT_TRUE(r.fullscreenDefined);
     ASSERT_EQ_BOOL(r.fullscreen, false);
 }
 
-static void test_solveParameters_fieldwise_independence() {
+static void test_solveParameters_fieldwise_independence_non_fullscreen() {
+    int w = 1920, h = 1080;
+
     parameters_t def = getBaseDefaultParameters();
     assert_base_defaults_fully_defined(def);
 
-    // cfg solo toca fps, opt solo toca delay. Lo demás debe venir de default.
     parameters_t cfg = params_only_fps(144);
     parameters_t opt = params_only_delay(7);
 
-    parameters_t r = solveParameters(def, cfg, opt);
+    parameters_t r = solveParameters(def, cfg, opt, w, h);
 
     ASSERT_EQ_INT(r.fps, 144);
     ASSERT_TRUE(r.fpsDefined);
@@ -279,17 +262,99 @@ static void test_solveParameters_fieldwise_independence() {
     ASSERT_TRUE(r.fullscreenDefined);
 }
 
-static void test_solveParameters_can_leave_fields_undefined_if_all_sources_undefined() {
-    // Si todas las fuentes son null, todo queda undefined y 0
+static void test_solveParameters_fullscreen_true_derives_rows_cols_from_window_and_blocksize() {
+    int w = 1920, h = 1080;
+
+    parameters_t def = getBaseDefaultParameters();
+    assert_base_defaults_fully_defined(def);
+
+    parameters_t cfg = params_null();
+    parameters_t opt = params_null();
+
+    cfg = params_only_fullscreen(true);
+    cfg.blockSize = 10; cfg.blockSizeDefined = true;
+
+    parameters_t r = solveParameters(def, cfg, opt, w, h);
+
+    ASSERT_TRUE(r.fullscreenDefined);
+    ASSERT_TRUE(r.fullscreen);
+
+    ASSERT_TRUE(r.blockSizeDefined);
+    ASSERT_EQ_INT(r.blockSize, 10);
+
+    ASSERT_TRUE(r.colsDefined);
+    ASSERT_TRUE(r.rowsDefined);
+    ASSERT_EQ_INT(r.cols, w / 10);
+    ASSERT_EQ_INT(r.rows, h / 10);
+}
+
+static void test_solveParameters_fullscreen_true_ignores_rows_cols_sources() {
+    int w = 1920, h = 1080;
+
+    parameters_t def = getBaseDefaultParameters();
+    assert_base_defaults_fully_defined(def);
+
+    parameters_t cfg = params_null();
+    parameters_t opt = params_null();
+
+    cfg = params_only_fullscreen(true);
+    cfg.blockSize = 8; cfg.blockSizeDefined = true;
+
+    cfg.rows = 1; cfg.rowsDefined = true;
+    cfg.cols = 1; cfg.colsDefined = true;
+
+    opt.rows = 2; opt.rowsDefined = true;
+    opt.cols = 2; opt.colsDefined = true;
+
+    parameters_t r = solveParameters(def, cfg, opt, w, h);
+
+    ASSERT_TRUE(r.fullscreenDefined);
+    ASSERT_TRUE(r.fullscreen);
+
+    ASSERT_EQ_INT(r.rows, h / 8);
+    ASSERT_EQ_INT(r.cols, w / 8);
+}
+
+static void test_solveParameters_fullscreen_false_uses_choose_for_rows_cols() {
+    int w = 1920, h = 1080;
+
+    parameters_t def = getBaseDefaultParameters();
+    assert_base_defaults_fully_defined(def);
+
+    parameters_t cfg = params_null();
+    parameters_t opt = params_null();
+
+    cfg = params_only_fullscreen(false);
+
+    cfg.rows = 111; cfg.rowsDefined = true;
+    cfg.cols = 222; cfg.colsDefined = true;
+
+    opt.rows = 333; opt.rowsDefined = true;
+    opt.cols = 444; opt.colsDefined = true;
+
+    parameters_t r = solveParameters(def, cfg, opt, w, h);
+
+    ASSERT_TRUE(r.fullscreenDefined);
+    ASSERT_FALSE(r.fullscreen);
+
+    ASSERT_TRUE(r.rowsDefined);
+    ASSERT_TRUE(r.colsDefined);
+    ASSERT_EQ_INT(r.rows, 333);
+    ASSERT_EQ_INT(r.cols, 444);
+}
+
+static void test_solveParameters_all_sources_null_stays_undefined() {
+    int w = 1920, h = 1080;
+
     parameters_t z = params_null();
-    parameters_t r = solveParameters(z, z, z);
+    parameters_t r = solveParameters(z, z, z, w, h);
 
     ASSERT_FALSE(r.rowsDefined);       ASSERT_EQ_INT(r.rows, 0);
     ASSERT_FALSE(r.colsDefined);       ASSERT_EQ_INT(r.cols, 0);
     ASSERT_FALSE(r.blockSizeDefined);  ASSERT_EQ_INT(r.blockSize, 0);
     ASSERT_FALSE(r.fpsDefined);        ASSERT_EQ_INT(r.fps, 0);
     ASSERT_FALSE(r.delayDefined);      ASSERT_EQ_INT(r.delay, 0);
-    ASSERT_FALSE(r.fullscreenDefined); ASSERT_EQ_BOOL(r.fullscreen, false); // bool 0
+    ASSERT_FALSE(r.fullscreenDefined); ASSERT_EQ_BOOL(r.fullscreen, false);
 }
 
 int main(void) {
@@ -305,8 +370,13 @@ int main(void) {
 
     test_solveParameters_precedence_options_over_config_over_default_ints();
     test_solveParameters_precedence_bool();
-    test_solveParameters_fieldwise_independence();
-    test_solveParameters_can_leave_fields_undefined_if_all_sources_undefined();
+    test_solveParameters_fieldwise_independence_non_fullscreen();
+
+    test_solveParameters_fullscreen_true_derives_rows_cols_from_window_and_blocksize();
+    test_solveParameters_fullscreen_true_ignores_rows_cols_sources();
+    test_solveParameters_fullscreen_false_uses_choose_for_rows_cols();
+
+    test_solveParameters_all_sources_null_stays_undefined();
 
     return 0;
 }

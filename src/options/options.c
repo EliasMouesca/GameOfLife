@@ -3,48 +3,47 @@
 parameters_t optionsToParameters(int argc, char* argv[]) {
     parameters_t params = getNullParameters();
 
-    struct option long_opts[] = {
-        {"rows",        required_argument, 0, 'r'},
-        {"cols",        required_argument, 0, 'c'},
-        {"block-size",  required_argument, 0, 'b'},
-        {"fps",         required_argument, 0, 'f'},
-        {"delay",       required_argument, 0, 'd'},
-        {"help",        no_argument,       0, 'h'},
-        {0, 0, 0, 0}
-    };
-
+    LONG_OPTIONS
 
     optind = 1;
     int opt;
-    while ((opt = getopt_long(argc, argv, GETOPT_STRING, long_opts, NULL)) != -1) {
-        switch (opt) {
-            case 'r':
-                params.rowsDefined = true;
-                params.rows = atoi(optarg);
-                break;
-            case 'c':
-                params.colsDefined = true;
-                params.cols = atoi(optarg);
-                break;
-            case 'b':
-                params.blockSizeDefined = true;
-                params.blockSize = atoi(optarg);
-                break;
-            case 'f':
+    int long_index = 0;
+    while ((opt = getopt_long(argc, argv, GETOPT_STRING, long_opts, &long_index)) != -1) {
+        if (opt == 0){
+            const char *name = long_opts[long_index].name;
+            if (strcmp(name, "fps") == 0){
                 params.fpsDefined = true;
                 params.fps = atoi(optarg);
-                break;
-            case 'd':
-                params.delayDefined = true;
-                params.delay = atoi(optarg);
-                break;
-            case 'h':
-                usage(argv[0]);
-                exit(0);
-                break;
-            case '?':
-                critical("Unknown option. Use %s --help", argv[0]);
-                break;
+            }
+        } else {
+            switch (opt) {
+                case 'r':
+                    params.rowsDefined = true;
+                    params.rows = atoi(optarg);
+                    break;
+                case 'c':
+                    params.colsDefined = true;
+                    params.cols = atoi(optarg);
+                    break;
+                case 'b':
+                    params.blockSizeDefined = true;
+                    params.blockSize = atoi(optarg);
+                    break;
+                case 'f':
+                    bool fullscreen = true;
+                    break;
+                case 'd':
+                    params.delayDefined = true;
+                    params.delay = atoi(optarg);
+                    break;
+                case 'h':
+                    usage(argv[0]);
+                    exit(0);
+                    break;
+                case '?':
+                    critical("Unknown option. Use %s --help", argv[0]);
+                    break;
+            }
         }
     }
 

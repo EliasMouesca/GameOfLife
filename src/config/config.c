@@ -38,15 +38,8 @@ void chooseAndOpenConfig(int argc, char* argv[], config_t *config) {
 }
 
 char* chooseConfigFile(int argc, char* argv[]) {
-    struct option long_opts[] = {
-        {"rows",        required_argument, 0, 'r'},
-        {"cols",        required_argument, 0, 'c'},
-        {"block-size",  required_argument, 0, 'b'},
-        {"fps",         required_argument, 0, 'f'},
-        {"delay",       required_argument, 0, 'd'},
-        {"help",        no_argument,       0, 'h'},
-        {0, 0, 0, 0}
-    };
+
+    LONG_OPTIONS
 
     optind = 1;
     while (getopt_long(argc, argv, GETOPT_STRING, long_opts, NULL) != -1);

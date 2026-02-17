@@ -1,5 +1,5 @@
-rows=35
-cols=50
-block_size=20
-fps=30
+rows=50
+cols=70
+block_size=15
+fps=60
 delay=100

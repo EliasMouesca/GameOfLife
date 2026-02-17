@@ -2,7 +2,7 @@
 
 #define DEFAULT_ROWS 70
 #define DEFAULT_COLS 100
-#define DEFAULT_BLOCK_SIZE 10
+#define DEFAULT_BLOCK_SIZE 17
 #define DEFAULT_FPS 30
 #define DEFAULT_DELAY 100
 
@@ -28,14 +28,17 @@ parameters_t getBaseDefaultParameters() {
 }
 
 parameters_t getSensibleDefaultParameters(int screenWidth, int screenHeight) {
+    // Somewhat random, but I think it works
+    int blockSize = screenHeight / 85;
+
     return (parameters_t){
-        .rows = (screenHeight / DEFAULT_BLOCK_SIZE) * 9 / 10,
+        .rows = (screenHeight / blockSize) * 8 / 10,
         .rowsDefined = true,
 
-        .cols = (screenWidth / DEFAULT_BLOCK_SIZE) * 9 / 10,
+        .cols = (screenWidth / blockSize) * 8 / 10,
         .colsDefined = true,
 
-        .blockSize = DEFAULT_BLOCK_SIZE,
+        .blockSize = blockSize,
         .blockSizeDefined = true,
 
         .fps = DEFAULT_FPS,

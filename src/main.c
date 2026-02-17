@@ -62,7 +62,8 @@ int main(int argc, char* argv[]) {
         SDL_Delay(1000 / gc->fps);
     }
 
-    destroyGame(game);
+    destroyGraphicContext(&gc);
+    destroyGame(&game);
 
     return 0;
 }

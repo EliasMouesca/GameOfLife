@@ -32,6 +32,7 @@ void chooseAndOpenConfig(int argc, char* argv[], config_t *config) {
     char* filename = chooseConfigFile(argc, argv);
     if (filename) {
         parseConfig(filename, config);
+        free(filename);
     }
 
     return;
@@ -44,17 +45,19 @@ char* chooseConfigFile(int argc, char* argv[]) {
     optind = 1;
     while (getopt_long(argc, argv, GETOPT_STRING, long_opts, NULL) != -1);
 
-    char* configPath = malloc(sizeof(char) * CONFIG_PATH_MAX_SIZE);
-
     if (optind < argc) {
+        char* configPath = malloc(sizeof(char) * CONFIG_PATH_MAX_SIZE);
         size_t size = strlen(argv[optind]);
-        if (size < CONFIG_PATH_MAX_SIZE) strncpy(configPath, argv[optind], CONFIG_PATH_MAX_SIZE - 1);
+
+        if (size < CONFIG_PATH_MAX_SIZE) 
+            strncpy(configPath, argv[optind], CONFIG_PATH_MAX_SIZE - 1);
         else critical("Config path '%s' too large (max: %d characters)", argv[1], CONFIG_PATH_MAX_SIZE);
-    } else return NULL;
 
-    debug("Config provided, reading parameters from '%s' ...", configPath);
+        debug("Config provided, reading parameters from '%s' ...", configPath);
+        return configPath;
+    }
 
-    return configPath;
+    return NULL;
 
 }
 

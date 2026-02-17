@@ -36,6 +36,9 @@ test: $(TESTS)
 test-run: $(TARGET)
 	valgrind $(VALGRINDFLAGS) $(PWD)/$< --block-size 7
 
+test-run-fullscreen: $(TARGET)
+	valgrind $(VALGRINDFLAGS) $(PWD)/$< --block-size 7 --fullscreen --delay 10 --fps 60
+
 clean:
 	rm -rf $(OBJ_DIR) $(TARGET) test test-*
 

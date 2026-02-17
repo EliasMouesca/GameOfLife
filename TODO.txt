@@ -1,3 +1,4 @@
+- --autostart flag y --example flag
 - Que en solve parameters, nunca vuelva sin setear que termine al menos seteando el base default
 - Guardar algunos estados anteriores y dibujar esos tmb en un grisesito
 - Colores configurables

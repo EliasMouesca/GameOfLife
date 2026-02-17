@@ -26,7 +26,18 @@ int main(int argc, char* argv[]) {
     debug("Config created");
     chooseAndOpenConfig(argc, argv, config);
 
-    parameters_t defaultParameters = getDefaultParameters();
+    SDL_DisplayID display = SDL_GetPrimaryDisplay();
+    int screenWidth = 0, screenHeight = 0;
+    const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(display);
+    if (!mode) {
+        error("Error getting screen size: %s", SDL_GetError());
+    } else {
+        screenWidth  = mode->w;
+        screenHeight = mode->h;
+    }
+
+
+    parameters_t defaultParameters = getSensibleDefaultParameters(screenWidth, screenHeight);
     parameters_t configParameters = configToParameters(config);
     destroyConfig(&config);
     parameters_t optionsParameters = optionsToParameters(argc, argv);

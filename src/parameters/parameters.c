@@ -8,7 +8,7 @@
 
 static int chooseInt(bool *defined, int a, bool aDef, int b, bool bDef, int c, bool cDef);
 
-parameters_t getDefaultParameters(void) {
+parameters_t getBaseDefaultParameters() {
     return (parameters_t){
         .rows = DEFAULT_ROWS,
         .rowsDefined = true,
@@ -27,7 +27,26 @@ parameters_t getDefaultParameters(void) {
     };
 }
 
-parameters_t getNullParameters(void) {
+parameters_t getSensibleDefaultParameters(int screenWidth, int screenHeight) {
+    return (parameters_t){
+        .rows = (screenHeight / DEFAULT_BLOCK_SIZE) * 9 / 10,
+        .rowsDefined = true,
+
+        .cols = (screenWidth / DEFAULT_BLOCK_SIZE) * 9 / 10,
+        .colsDefined = true,
+
+        .blockSize = DEFAULT_BLOCK_SIZE,
+        .blockSizeDefined = true,
+
+        .fps = DEFAULT_FPS,
+        .fpsDefined = true,
+
+        .delay = DEFAULT_DELAY,
+        .delayDefined = true,
+    };
+}
+
+parameters_t getNullParameters() {
     return (parameters_t){0};
 }
 

@@ -5,6 +5,8 @@ obj
 config.txt
 test-*
 
+vgcore*
+
 main
 game
 test

@@ -2,6 +2,5 @@
 - Que en solve parameters, nunca vuelva sin setear que termine al menos seteando el base default
 - Guardar algunos estados anteriores y dibujar esos tmb en un grisesito
 - Colores configurables
-- fullscreen flag
 - Un modo fiesta en el que cada nuevo cuadradito que nace es de otro color
 - Hacer resizable la ventana y que se agreguen celdas correspondiente

@@ -25,10 +25,10 @@ graphic_context_t* createGraphicContext() {
     if (gc->renderer == NULL)
         critical("Could not create renderer: %s", SDL_GetError());
 
+    gc->grid = makeEmptyGrid();
 
     gc->blockSize = 0;
     gc->fps = 0;
-
 
     return gc;
 }
@@ -39,7 +39,8 @@ void setGraphicContextParameters(graphic_context_t* gc, parameters_t params) {
         error("Called setGraphicsContextParameters with '%s' not set", buffer);
     free(buffer);
 
-
+    drawable_cell_t model = {.color={.r=0,.g=0,.b=0,.a=0},.alive=false};
+    gc->grid = makeModelGrid(params.rows, params.cols, sizeof(drawable_cell_t), &model);
 
     gc->blockSize = params.blockSize;
     gc->fps = params.fps;
@@ -70,6 +71,8 @@ void destroyGraphicContext(graphic_context_t** gcp) {
         SDL_DestroyWindow(gc->window);
         gc->window = NULL;
     }
+
+    freeGrid(gc->grid);
 
     free(gc);
     *gcp = NULL;

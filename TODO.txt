@@ -1,6 +1,7 @@
+- Implementar flag --party (está la funcionalidad pero no la flag) y la flag --rainbow (que es parecido a --party pero no por cada celda sino en general), hacer configurables los parámetros.
+- Arreglar los tests
 - --autostart flag y --example flag
 - Que en solve parameters, nunca vuelva sin setear que termine al menos seteando el base default
 - Guardar algunos estados anteriores y dibujar esos tmb en un grisesito
 - Colores configurables
-- Un modo fiesta en el que cada nuevo cuadradito que nace es de otro color
 - Hacer resizable la ventana y que se agreguen celdas correspondiente

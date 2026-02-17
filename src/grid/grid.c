@@ -1,18 +1,15 @@
 #include "grid.h"
 
-grid_t makeGrid(int rows, int cols, size_t elem_size, const void* init) {
+grid_t makeCopyGrid(int rows, int cols, size_t elementSize, const void* init) {
     grid_t g;
     g.rows = rows;
     g.cols = cols;
-    g.elem_size = elem_size;
+    g.elementSize = elementSize;
 
-    size_t total = (size_t)rows * (size_t)cols * elem_size;
+    size_t total = (size_t)rows * (size_t)cols * elementSize;
 
     g.cells = malloc(total);
-    if (!g.cells) {
-        fprintf(stderr, "Out of memory\n");
-        exit(1);
-    }
+    if (!g.cells) critical("Out of memory\n");
 
     if (init)
         memcpy(g.cells, init, total);
@@ -22,11 +19,32 @@ grid_t makeGrid(int rows, int cols, size_t elem_size, const void* init) {
     return g;
 }
 
-void initializeGrid(grid_t* grid) {
-    grid->cells = NULL;
-    grid->elem_size = 0;
-    grid->rows = 0;
-    grid->cols = 0;
+grid_t makeEmptyGrid() {
+    return (grid_t){.rows=0, .cols=0,.elementSize=0,.cells=NULL};
+}
+
+grid_t makeModelGrid(int rows, int cols, size_t elementSize, const void* model) {
+    if (elementSize == 0) critical("Llamada a makeModelGrid() con elementSize = 0");
+    grid_t g;
+    g.rows = rows;
+    g.cols = cols;
+    g.elementSize = elementSize;
+
+    size_t total = (size_t)rows * (size_t)cols * elementSize;
+    g.cells = malloc(total);
+
+    if (!g.cells) critical("Out of memory\n");
+
+    if (!model){
+        memset(g.cells, 0 , total);
+        return g;
+    }
+
+    for (int i = 0; i < g.cols * g.rows * g.elementSize; i+=g.elementSize)
+        memcpy((char*)g.cells+i, model, elementSize);
+
+    return g;
+
 }
 
 void shiftGrid(grid_t grid, direction_t direction) {
@@ -40,7 +58,7 @@ void shiftGrid(grid_t grid, direction_t direction) {
         default:              dx = 0;  dy = 0;  break;
     }
 
-    size_t total = (size_t)grid.rows * (size_t)grid.cols * grid.elem_size;
+    size_t total = (size_t)grid.rows * (size_t)grid.cols * grid.elementSize;
 
     unsigned char* buffer = malloc(total);
     if (!buffer) {
@@ -58,15 +76,15 @@ void shiftGrid(grid_t grid, direction_t direction) {
         int newY = y + dy;
 
         unsigned char* dst_cell =
-            buffer + ((size_t)(y * grid.cols + x) * grid.elem_size);
+            buffer + ((size_t)(y * grid.cols + x) * grid.elementSize);
 
         if (newX >= 0 && newX < grid.cols &&
             newY >= 0 && newY < grid.rows)
         {
             unsigned char* src_cell =
-                src + ((size_t)(newY * grid.cols + newX) * grid.elem_size);
+                src + ((size_t)(newY * grid.cols + newX) * grid.elementSize);
 
-            memcpy(dst_cell, src_cell, grid.elem_size);
+            memcpy(dst_cell, src_cell, grid.elementSize);
         }
     }
 
@@ -75,6 +93,6 @@ void shiftGrid(grid_t grid, direction_t direction) {
 }
 
 void freeGrid(grid_t g) {
-    free(g.cells);
+    if (g.cells) free(g.cells);
 }
 

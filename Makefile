@@ -7,7 +7,7 @@ VALGRINDFLAGS := --tool=memcheck --leak-check=yes --track-origins=yes --num-call
 PWD := $(shell pwd)
 SRC_DIR := src
 OBJ_DIR := obj
-TARGET  := game
+TARGET  := main
 
 SRCS := $(shell find $(SRC_DIR) -name '*.c')
 MODULES_SRCS := $(filter-out %_test.c $(SRC_DIR)/main.c,$(SRCS))

@@ -10,10 +10,19 @@ void die(const char* fmt, ...) {
     exit(EXIT_FAILURE);
 }
 
-void trim(char* str) {
-    while (isspace((unsigned char)*str)) str++;
+void trim(char* s) {
+    char *start = s;
+    while (isspace((unsigned char)*start)) start++;
 
-    char *end = str + strlen(str) - 1;
-    while (end > str && isspace((unsigned char)*end)) end--;
+    if (*start == 0) {
+        *s = 0;
+        return;
+    }
+
+    char *end = start + strlen(start) - 1;
+    while (end > start && isspace((unsigned char)*end)) end--;
     *(end + 1) = '\0';
+
+    memmove(s, start, end - start + 2);
 }
+

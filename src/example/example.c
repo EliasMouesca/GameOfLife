@@ -10,7 +10,7 @@ void destroyExample(example_t* example) {
 example_t nothing() {
     example_t e;
     e.rows = 0;
-    e.rows = 0;
+    e.cols = 0;
     e.hpos = LEFT;
     e.vpos = TOP;
     e.cells = NULL;

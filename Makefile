@@ -31,6 +31,7 @@ TEST_SRCS := $(filter %_test.c,$(SRCS))
 TEST_OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(TEST_SRCS))
 
 test: $(TESTS)
+	@printf "\033[1;32mAll tests passed!\033[0m\n\n"
 
 
 clean:
@@ -42,10 +43,10 @@ clean:
 # Magia rara porque make no deja usar dos veces la wildcard (%)
 define build_test_rule
 test-$1: $(MODULES_OBJS) $(OBJ_DIR)/$1/$1_test.o
-	$(CC) $$^ $(LDFLAGS) -o $$@
-	@printf "\n=== $1 test ===\n"
-	valgrind $(VALGRINDFLAGS) $(PWD)/$$@ && printf "\nPassed!\n"
-	@printf "===============\n\n"
-	rm $$@
+	@$(CC) $$^ $(LDFLAGS) -o $$@
+	@printf "\033[90m\n=== $1 test ===\033[0m\n"
+	@valgrind $(VALGRINDFLAGS) $(PWD)/$$@ && printf "\033[32m\nPassed!\n\033[0m"
+	@printf "\033[90m===============\033[0m\n\n"
+	@rm $$@
 endef
 $(foreach f,$(MODULES),$(eval $(call build_test_rule,$f)))

@@ -43,6 +43,12 @@ void setGraphicContextParameters(graphic_context_t* gc, parameters_t params) {
     if (!params.fpsDefined)
         critical("Called setGraphicsContextParameters with 'fps' not set");
 
+
+    char* buffer = malloc(256 * sizeof(char));
+    if (!areAllParametersSet(params, buffer))
+        error("Called setGraphicsContextParameters with '%s' not set", buffer);
+    free(buffer);
+
     int windowWidth = params.cols * params.blockSize;
     int windowHeight = params.rows * params.blockSize;
 

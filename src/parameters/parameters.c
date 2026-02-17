@@ -5,8 +5,10 @@
 #define DEFAULT_BLOCK_SIZE 17
 #define DEFAULT_FPS 30
 #define DEFAULT_DELAY 100
+#define DEFAULT_FULLSCREEN false
 
 static int chooseInt(bool *defined, int a, bool aDef, int b, bool bDef, int c, bool cDef);
+static bool chooseBool(bool *defined, bool a, bool aDef, bool b, bool bDef, bool c, bool cDef);
 
 parameters_t getBaseDefaultParameters() {
     return (parameters_t){
@@ -24,6 +26,10 @@ parameters_t getBaseDefaultParameters() {
 
         .delay = DEFAULT_DELAY,
         .delayDefined = true,
+
+        .fullscreen = DEFAULT_FULLSCREEN,
+        .fullscreenDefined = true,
+
     };
 }
 
@@ -46,11 +52,49 @@ parameters_t getSensibleDefaultParameters(int screenWidth, int screenHeight) {
 
         .delay = DEFAULT_DELAY,
         .delayDefined = true,
+
+        .fullscreen = DEFAULT_FULLSCREEN,
+        .fullscreenDefined = true,
     };
 }
 
 parameters_t getNullParameters() {
     return (parameters_t){0};
+}
+
+bool areAllParametersSet(parameters_t params, char* buffer) {
+    if (!params.colsDefined) {
+        if (buffer) strcpy(buffer, "cols");
+        return false;
+    }
+
+    if (!params.rowsDefined) {
+        if (buffer) strcpy(buffer, "rows");
+        return false;
+    }
+
+    if (!params.blockSizeDefined) {
+        if (buffer) strcpy(buffer, "blockSize");
+        return false;
+    }
+
+    if (!params.fpsDefined){
+        if (buffer) strcpy(buffer, "fps");
+        return false;
+    }
+
+    if (!params.delayDefined){
+        if (buffer) strcpy(buffer, "delay");
+        return false;
+    }
+
+    if (!params.fullscreenDefined){
+        if (buffer) strcpy(buffer, "fullscreen");
+        return false;
+    }
+
+    return true;
+
 }
 
 parameters_t solveParameters(parameters_t defaultParams, parameters_t configParams, parameters_t optionsParams) {
@@ -81,6 +125,10 @@ parameters_t solveParameters(parameters_t defaultParams, parameters_t configPara
                     configParams.delay,   configParams.delayDefined,
                     optionsParams.delay,  optionsParams.delayDefined);
 
+    p.fullscreen = chooseBool(&p.fullscreenDefined,
+                    defaultParams.fullscreen,  defaultParams.fullscreenDefined,
+                    configParams.fullscreen,   configParams.fullscreenDefined,
+                    optionsParams.fullscreen,  optionsParams.fullscreenDefined);
 
     return p;
 }
@@ -98,4 +146,15 @@ static int chooseInt(bool *defined,
     return 0;
 }
 
+static bool chooseBool(bool *defined,
+                     bool a, bool aDef,
+                     bool b, bool bDef,
+                     bool c, bool cDef)
+{
+    if (cDef) { *defined = true; return c; }
+    if (bDef) { *defined = true; return b; }
+    if (aDef) { *defined = true; return a; }
+    *defined = false;
+    return 0;
+}
 

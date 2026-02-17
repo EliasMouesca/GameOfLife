@@ -30,7 +30,8 @@ parameters_t optionsToParameters(int argc, char* argv[]) {
                     params.blockSize = atoi(optarg);
                     break;
                 case 'f':
-                    bool fullscreen = true;
+                    params.fullscreenDefined = true;
+                    params.fullscreen = true;
                     break;
                 case 'd':
                     params.delayDefined = true;

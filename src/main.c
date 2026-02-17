@@ -36,7 +36,6 @@ int main(int argc, char* argv[]) {
         screenHeight = mode->h;
     }
 
-
     parameters_t defaultParameters = getSensibleDefaultParameters(screenWidth, screenHeight);
     parameters_t configParameters = configToParameters(config);
     destroyConfig(&config);

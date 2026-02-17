@@ -33,6 +33,8 @@ TEST_OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(TEST_SRCS))
 test: $(TESTS)
 	@printf "\033[1;32mAll tests passed!\033[0m\n\n"
 
+test-run: $(TARGET)
+	valgrind $(VALGRINDFLAGS) $(PWD)/$< --block-size 7
 
 clean:
 	rm -rf $(OBJ_DIR) $(TARGET) test test-*

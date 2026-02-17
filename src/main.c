@@ -41,8 +41,7 @@ int main(int argc, char* argv[]) {
     destroyConfig(&config);
     parameters_t optionsParameters = optionsToParameters(argc, argv);
     
-    parameters_t params = solveParameters(defaultParameters, configParameters, optionsParameters);
-
+    parameters_t params = solveParameters(defaultParameters, configParameters, optionsParameters, screenWidth, screenHeight);
 
     setGameParameters(game, params);
     setGraphicContextParameters(gc, params);

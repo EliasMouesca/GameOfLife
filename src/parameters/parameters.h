@@ -16,7 +16,7 @@ typedef struct {
 parameters_t getNullParameters();
 parameters_t getSensibleDefaultParameters(int screenWidth, int screenHeight);
 parameters_t getBaseDefaultParameters();
-parameters_t solveParameters(parameters_t defaultParams, parameters_t configParams, parameters_t optionsParams);
+parameters_t solveParameters(parameters_t defaultParams, parameters_t configParams, parameters_t optionsParams, int windowWidth, int windowHeight);
 bool areAllParametersSet(parameters_t params, char* missing);
 
 #endif

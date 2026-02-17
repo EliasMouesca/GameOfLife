@@ -97,23 +97,35 @@ bool areAllParametersSet(parameters_t params, char* buffer) {
 
 }
 
-parameters_t solveParameters(parameters_t defaultParams, parameters_t configParams, parameters_t optionsParams) {
+parameters_t solveParameters(parameters_t defaultParams, parameters_t configParams, parameters_t optionsParams, int screenWidth, int screenHeight) {
     parameters_t p = getNullParameters();
 
-    p.rows = chooseInt(&p.rowsDefined,
-                   defaultParams.rows,  defaultParams.rowsDefined,
-                   configParams.rows,   configParams.rowsDefined,
-                   optionsParams.rows,  optionsParams.rowsDefined);
-
-    p.cols = chooseInt(&p.colsDefined,
-                   defaultParams.cols,  defaultParams.colsDefined,
-                   configParams.cols,   configParams.colsDefined,
-                   optionsParams.cols,  optionsParams.colsDefined);
+    p.fullscreen = chooseBool(&p.fullscreenDefined,
+                    defaultParams.fullscreen,  defaultParams.fullscreenDefined,
+                    configParams.fullscreen,   configParams.fullscreenDefined,
+                    optionsParams.fullscreen,  optionsParams.fullscreenDefined);
 
     p.blockSize = chooseInt(&p.blockSizeDefined,
                         defaultParams.blockSize, defaultParams.blockSizeDefined,
                         configParams.blockSize,  configParams.blockSizeDefined,
                         optionsParams.blockSize, optionsParams.blockSizeDefined);
+
+    if (p.fullscreenDefined && p.fullscreen) {
+        p.cols = screenWidth / p.blockSize;
+        p.colsDefined = true;
+        p.rows = screenHeight / p.blockSize;
+        p.rowsDefined = true;
+    } else {
+        p.rows = chooseInt(&p.rowsDefined,
+                       defaultParams.rows,  defaultParams.rowsDefined,
+                       configParams.rows,   configParams.rowsDefined,
+                       optionsParams.rows,  optionsParams.rowsDefined);
+
+        p.cols = chooseInt(&p.colsDefined,
+                       defaultParams.cols,  defaultParams.colsDefined,
+                       configParams.cols,   configParams.colsDefined,
+                       optionsParams.cols,  optionsParams.colsDefined);
+    }
 
     p.fps = chooseInt(&p.fpsDefined,
                   defaultParams.fps,  defaultParams.fpsDefined,
@@ -125,10 +137,6 @@ parameters_t solveParameters(parameters_t defaultParams, parameters_t configPara
                     configParams.delay,   configParams.delayDefined,
                     optionsParams.delay,  optionsParams.delayDefined);
 
-    p.fullscreen = chooseBool(&p.fullscreenDefined,
-                    defaultParams.fullscreen,  defaultParams.fullscreenDefined,
-                    configParams.fullscreen,   configParams.fullscreenDefined,
-                    optionsParams.fullscreen,  optionsParams.fullscreenDefined);
 
     return p;
 }

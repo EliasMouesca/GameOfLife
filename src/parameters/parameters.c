@@ -151,10 +151,9 @@ parameters_t solveParameters(parameters_t defaultParams, parameters_t configPara
                     optionsParams.delay,  optionsParams.delayDefined);
 
     p.party = chooseBool(&p.partyDefined,
-                    defaultParams.party,  defaultParams.party,
-                    configParams.party,   configParams.party,
-                    optionsParams.party,  optionsParams.party);
-
+                    defaultParams.party,  defaultParams.partyDefined,
+                    configParams.party,   configParams.partyDefined,
+                    optionsParams.party,  optionsParams.partyDefined);
 
     return p;
 }

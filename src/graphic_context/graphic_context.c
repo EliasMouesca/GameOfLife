@@ -44,6 +44,7 @@ void setGraphicContextParameters(graphic_context_t* gc, parameters_t params) {
 
     gc->blockSize = params.blockSize;
     gc->fps = params.fps;
+    gc->party = params.party;
 
     if (params.fullscreen) {
         SDL_SetWindowFullscreen(gc->window, true);

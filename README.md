@@ -31,3 +31,6 @@ The program automatically tries opening "config.txt" but you can pass a config a
 
 ![showcase gif](./img/2.gif)
 
+### Party Mode
+![showcase gif of party mode](./img/3.gif)
+

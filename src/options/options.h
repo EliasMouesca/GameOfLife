@@ -10,7 +10,7 @@
 #include "../parameters/parameters.h"
 #include "../log/log.h"
 
-#define GETOPT_STRING "r:c:b:fd:h"
+#define GETOPT_STRING "r:c:b:fpd:h"
 
 #define LONG_OPTIONS struct option long_opts[] = {\
         {"rows",        required_argument,  0, 'r'},\

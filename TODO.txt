@@ -1,6 +1,6 @@
-- Implementar flag --party (está la funcionalidad pero no la flag) y la flag --rainbow (que es parecido a --party pero no por cada celda sino en general), hacer configurables los parámetros.
+- Implementar la flag --rainbow (que es parecido a --party pero no por cada celda sino en general), hacer configurables los parámetros.
 - --autostart flag y --example flag
 - Que en solve parameters, nunca vuelva sin setear que termine al menos seteando el base default
-- Guardar algunos estados anteriores y dibujar esos tmb en un grisesito
+- Que en vez de matar directo la celda se vaya volviendo gris hasta el negro de a poco (configurable)
 - Colores configurables
-- Hacer resizable la ventana y que se agreguen celdas correspondiente
+- Hacer resizable la ventana y que se agreguen las celdas correspondientes

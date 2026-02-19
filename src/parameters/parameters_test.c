@@ -6,11 +6,11 @@
 
 #include "parameters.h"
 
-#define ASSERT_TRUE(x)  assert((x) && "ASSERT_TRUE failed: " #x)
-#define ASSERT_FALSE(x) assert(!(x) && "ASSERT_FALSE failed: " #x)
-#define ASSERT_EQ_INT(a,b) assert(((a)==(b)) && "ASSERT_EQ_INT failed")
-#define ASSERT_EQ_BOOL(a,b) assert(((a)==(b)) && "ASSERT_EQ_BOOL failed")
-#define ASSERT_STREQ(a,b) assert((strcmp((a),(b))==0) && "ASSERT_STREQ failed")
+#define ASSERT_TRUE(x)        assert((x) && "ASSERT_TRUE failed: " #x)
+#define ASSERT_FALSE(x)       assert(!(x) && "ASSERT_FALSE failed: " #x)
+#define ASSERT_EQ_INT(a,b)    assert(((a)==(b)) && "ASSERT_EQ_INT failed")
+#define ASSERT_EQ_BOOL(a,b)   assert(((a)==(b)) && "ASSERT_EQ_BOOL failed")
+#define ASSERT_STREQ(a,b)     assert((strcmp((a),(b))==0) && "ASSERT_STREQ failed")
 
 static parameters_t params_null(void) {
     return getNullParameters();
@@ -58,6 +58,13 @@ static parameters_t params_only_fullscreen(bool fs) {
     return p;
 }
 
+static parameters_t params_only_party(bool party) {
+    parameters_t p = getNullParameters();
+    p.party = party;
+    p.partyDefined = true;
+    return p;
+}
+
 static void assert_base_defaults_fully_defined(parameters_t p) {
     ASSERT_TRUE(p.rowsDefined);
     ASSERT_TRUE(p.colsDefined);
@@ -65,6 +72,7 @@ static void assert_base_defaults_fully_defined(parameters_t p) {
     ASSERT_TRUE(p.fpsDefined);
     ASSERT_TRUE(p.delayDefined);
     ASSERT_TRUE(p.fullscreenDefined);
+    ASSERT_TRUE(p.partyDefined);
 
     char buf[64];
     memset(buf, 0xAB, sizeof(buf));
@@ -81,6 +89,7 @@ static void test_getNullParameters_all_undefined() {
     ASSERT_FALSE(p.fpsDefined);
     ASSERT_FALSE(p.delayDefined);
     ASSERT_FALSE(p.fullscreenDefined);
+    ASSERT_FALSE(p.partyDefined);
 }
 
 static void test_getBaseDefaultParameters_all_defined_and_valid() {
@@ -94,6 +103,7 @@ static void test_getBaseDefaultParameters_all_defined_and_valid() {
     ASSERT_EQ_INT(p.fps, 30);
     ASSERT_EQ_INT(p.delay, 100);
     ASSERT_EQ_BOOL(p.fullscreen, false);
+    ASSERT_EQ_BOOL(p.party, false);
 
     ASSERT_TRUE(p.rows > 0);
     ASSERT_TRUE(p.cols > 0);
@@ -112,6 +122,7 @@ static void test_getBaseDefaultParameters_is_stable_across_calls() {
     ASSERT_EQ_INT(a.fps, b.fps);
     ASSERT_EQ_INT(a.delay, b.delay);
     ASSERT_EQ_BOOL(a.fullscreen, b.fullscreen);
+    ASSERT_EQ_BOOL(a.party, b.party);
 
     ASSERT_EQ_BOOL(a.rowsDefined, b.rowsDefined);
     ASSERT_EQ_BOOL(a.colsDefined, b.colsDefined);
@@ -119,6 +130,7 @@ static void test_getBaseDefaultParameters_is_stable_across_calls() {
     ASSERT_EQ_BOOL(a.fpsDefined, b.fpsDefined);
     ASSERT_EQ_BOOL(a.delayDefined, b.delayDefined);
     ASSERT_EQ_BOOL(a.fullscreenDefined, b.fullscreenDefined);
+    ASSERT_EQ_BOOL(a.partyDefined, b.partyDefined);
 }
 
 static void test_getSensibleDefaultParameters_sets_defined_and_calculates() {
@@ -133,14 +145,21 @@ static void test_getSensibleDefaultParameters_sets_defined_and_calculates() {
     ASSERT_TRUE(p.fpsDefined);
     ASSERT_TRUE(p.delayDefined);
     ASSERT_TRUE(p.fullscreenDefined);
+    ASSERT_TRUE(p.partyDefined);
 
+    // screenH / 85 = 1080 / 85 = 12 (int)
     ASSERT_EQ_INT(p.blockSize, 12);
+
+    // rows = (screenH / blockSize) * 8 / 10 = (1080/12)*0.8 = 90*0.8 = 72
     ASSERT_EQ_INT(p.rows, 72);
+
+    // cols = (screenW / blockSize) * 8 / 10 = (1920/12)*0.8 = 160*0.8 = 128
     ASSERT_EQ_INT(p.cols, 128);
 
     ASSERT_EQ_INT(p.fps, 30);
     ASSERT_EQ_INT(p.delay, 100);
     ASSERT_EQ_BOOL(p.fullscreen, false);
+    ASSERT_EQ_BOOL(p.party, false);
 
     ASSERT_TRUE(p.rows > 0);
     ASSERT_TRUE(p.cols > 0);
@@ -176,6 +195,10 @@ static void test_areAllParametersSet_false_reports_first_missing_in_order() {
     ASSERT_STREQ(buf, "fullscreen");
 
     p.fullscreen = true; p.fullscreenDefined = true;
+    ASSERT_FALSE(areAllParametersSet(p, buf));
+    ASSERT_STREQ(buf, "party");
+
+    p.party = true; p.partyDefined = true;
     ASSERT_TRUE(areAllParametersSet(p, buf));
 }
 
@@ -355,6 +378,7 @@ static void test_solveParameters_all_sources_null_stays_undefined() {
     ASSERT_FALSE(r.fpsDefined);        ASSERT_EQ_INT(r.fps, 0);
     ASSERT_FALSE(r.delayDefined);      ASSERT_EQ_INT(r.delay, 0);
     ASSERT_FALSE(r.fullscreenDefined); ASSERT_EQ_BOOL(r.fullscreen, false);
+    ASSERT_FALSE(r.partyDefined);      ASSERT_EQ_BOOL(r.party, false);
 }
 
 int main(void) {
@@ -380,4 +404,3 @@ int main(void) {
 
     return 0;
 }
-

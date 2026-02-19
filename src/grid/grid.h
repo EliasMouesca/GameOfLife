@@ -19,7 +19,6 @@ typedef struct {
 grid_t makeCopyGrid(int rows, int cols, size_t elementSize, const void* init);
 grid_t makeModelGrid(int rows, int cols, size_t elementSize, const void* init);
 grid_t makeEmptyGrid();
-void initializeGrid(grid_t* grid, size_t elementSize, const void* model);
 void shiftGrid(grid_t grid, direction_t direction);
 void freeGrid(grid_t g);
 

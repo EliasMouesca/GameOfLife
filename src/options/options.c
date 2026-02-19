@@ -32,6 +32,10 @@ parameters_t optionsToParameters(int argc, char* argv[]) {
                 case 'f':
                     params.fullscreenDefined = true;
                     params.fullscreen = true;
+                case 'p':
+                    params.partyDefined = true;
+                    params.party = true;
+                    break;
                     break;
                 case 'd':
                     params.delayDefined = true;

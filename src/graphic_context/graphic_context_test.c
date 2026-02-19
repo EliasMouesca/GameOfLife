@@ -1,12 +1,16 @@
+// File: src/graphic_context/graphic_context_test.c
+
 #include <assert.h>
 #include <stdbool.h>
+
+#include <SDL2/SDL.h>
 
 #include "graphic_context.h"
 #include "../parameters/parameters.h"
 
-#define ASSERT_TRUE(x)  assert((x) && "ASSERT_TRUE failed: " #x)
-#define ASSERT_FALSE(x) assert(!(x) && "ASSERT_FALSE failed: " #x)
-#define ASSERT_EQ_INT(a,b) assert(((a)==(b)) && "ASSERT_EQ_INT failed")
+#define ASSERT_TRUE(x)        assert((x) && "ASSERT_TRUE failed: " #x)
+#define ASSERT_FALSE(x)       assert(!(x) && "ASSERT_FALSE failed: " #x)
+#define ASSERT_EQ_INT(a,b)    assert(((a)==(b)) && "ASSERT_EQ_INT failed")
 
 static parameters_t params_gc(int rows, int cols, int blockSize, int fps) {
     parameters_t p = getNullParameters();
@@ -16,10 +20,10 @@ static parameters_t params_gc(int rows, int cols, int blockSize, int fps) {
     p.blockSize = blockSize; p.blockSizeDefined = true;
     p.fps = fps; p.fpsDefined = true;
 
-    // Estos no los usa setGraphicContextParameters para calcular tamaños,
-    // pero la función llama areAllParametersSet(params, ...) y exige TODO.
+    // setGraphicContextParameters() llama areAllParametersSet() y exige todo
     p.delay = 0; p.delayDefined = true;
     p.fullscreen = false; p.fullscreenDefined = true;
+    p.party = false; p.partyDefined = true;
 
     return p;
 }
@@ -55,10 +59,8 @@ static void test_setGraphicContextParameters_sets_fields_and_window_size_and_sho
     ASSERT_EQ_INT(w, 20 * 7);
     ASSERT_EQ_INT(h, 10 * 7);
 
-    // debería estar shown luego de SDL_ShowWindow
-    const SDL_WindowFlags flags = SDL_GetWindowFlags(gc->window);
-    ASSERT_FALSE(SDL_GetWindowFlags(gc->window) & SDL_WINDOW_HIDDEN);
-
+    // debería estar "shown" luego de SDL_ShowWindow()
+    ASSERT_FALSE((SDL_GetWindowFlags(gc->window) & SDL_WINDOW_HIDDEN) != 0);
 
     destroyGraphicContext(&gc);
     ASSERT_TRUE(gc == NULL);
@@ -83,4 +85,3 @@ int main(void) {
     test_destroyGraphicContext_null_safe_and_quits_sdl();
     return 0;
 }
-

@@ -11,6 +11,7 @@ typedef struct {
     int fps; bool fpsDefined;
     int delay; bool delayDefined;
     bool fullscreen; bool fullscreenDefined;
+    bool party; bool partyDefined;
 } parameters_t;
 
 parameters_t getNullParameters();

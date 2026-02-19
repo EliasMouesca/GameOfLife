@@ -18,6 +18,7 @@
         {"block-size",  required_argument,  0, 'b'},\
         {"fps",         required_argument,  0, 0},\
         {"fullscreen",  no_argument,        0, 'f'},\
+        {"party",       no_argument,        0, 'p'},\
         {"delay",       required_argument,  0, 'd'},\
         {"help",        no_argument,        0, 'h'},\
         {0, 0, 0, 0}\

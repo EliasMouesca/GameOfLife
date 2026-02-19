@@ -6,6 +6,7 @@
 #define DEFAULT_FPS 30
 #define DEFAULT_DELAY 100
 #define DEFAULT_FULLSCREEN false
+#define DEFAULT_PARTY false
 
 static int chooseInt(bool *defined, int a, bool aDef, int b, bool bDef, int c, bool cDef);
 static bool chooseBool(bool *defined, bool a, bool aDef, bool b, bool bDef, bool c, bool cDef);
@@ -29,6 +30,9 @@ parameters_t getBaseDefaultParameters() {
 
         .fullscreen = DEFAULT_FULLSCREEN,
         .fullscreenDefined = true,
+
+        .party = DEFAULT_PARTY,
+        .partyDefined = true,
 
     };
 }
@@ -55,6 +59,10 @@ parameters_t getSensibleDefaultParameters(int screenWidth, int screenHeight) {
 
         .fullscreen = DEFAULT_FULLSCREEN,
         .fullscreenDefined = true,
+
+        .party = DEFAULT_PARTY,
+        .partyDefined = true,
+
     };
 }
 
@@ -90,6 +98,11 @@ bool areAllParametersSet(parameters_t params, char* buffer) {
 
     if (!params.fullscreenDefined){
         if (buffer) strcpy(buffer, "fullscreen");
+        return false;
+    }
+    
+    if (!params.partyDefined){
+        if (buffer) strcpy(buffer, "party");
         return false;
     }
 
@@ -136,6 +149,11 @@ parameters_t solveParameters(parameters_t defaultParams, parameters_t configPara
                     defaultParams.delay,  defaultParams.delayDefined,
                     configParams.delay,   configParams.delayDefined,
                     optionsParams.delay,  optionsParams.delayDefined);
+
+    p.party = chooseBool(&p.partyDefined,
+                    defaultParams.party,  defaultParams.party,
+                    configParams.party,   configParams.party,
+                    optionsParams.party,  optionsParams.party);
 
 
     return p;

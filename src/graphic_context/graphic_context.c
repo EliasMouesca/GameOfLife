@@ -36,7 +36,7 @@ graphic_context_t* createGraphicContext() {
 void setGraphicContextParameters(graphic_context_t* gc, parameters_t params) {
     char* buffer = malloc(256 * sizeof(char));
     if (!areAllParametersSet(params, buffer))
-        error("Called setGraphicsContextParameters with '%s' not set", buffer);
+        critical("Called setGraphicsContextParameters with '%s' not set", buffer);
     free(buffer);
 
     drawable_cell_t model = {.color={.r=0,.g=0,.b=0,.a=0},.alive=false};

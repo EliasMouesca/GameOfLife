@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct {
+typedef struct parameters_t {
     int rows; bool rowsDefined;
     int cols; bool colsDefined;
     int blockSize; bool blockSizeDefined;

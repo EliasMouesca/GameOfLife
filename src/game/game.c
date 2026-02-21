@@ -1,17 +1,41 @@
 #include "game.h"
 
+#include <SDL3/SDL.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+
+#include "../utils/utils.h"
+#include "../config/config.h"
+#include "../types/direction.h"
+#include "../example/example.h"
+#include "../graphic_context/graphic_context.h"
+#include "../render_state/render_state.h"
+#include "../log/log.h"
+#include "../grid/grid.h"
+#include "../parameters/parameters.h"
+
 #define DELAY_TINY_STEP 10
 #define DELAY_BIG_STEP 25
 #define DELAY_TOP_LIMIT 1000
 #define DELAY_BOTTOM_LIMIT 0
 
-#define COLOR_SUPERIOR_LIMIT 255
-#define COLOR_INFERIOR_LIMIT 100
+struct game_t {
+    Sint32 mouseX;
+    Sint32 mouseY;
+
+    pthread_t updaterThread;
+
+    grid_t* grid;
+    pthread_mutex_t gridLock;
+    int delay;
+    bool updating;
+    bool running;
+
+};
 
 void* gameUpdater(void* arg);
-SDL_Color getNextRandomColor();
-SDL_Color getTrueRandomColor();
-void setDrawColor(SDL_Renderer* ren, SDL_Color color);
+void processShift(game_t* game, graphic_context_t* gc, direction_t direction);
 
 game_t* createGame() {
     game_t* game = malloc(sizeof(game_t));
@@ -31,6 +55,43 @@ game_t* createGame() {
     return game;
 }
 
+void processShift(game_t* game, graphic_context_t* gc, direction_t direction) {
+    pthread_mutex_lock(&game->gridLock);
+    shiftGrid(game->grid, direction);
+    pthread_mutex_unlock(&game->gridLock);
+
+    processShiftGraphicContext(gc, direction);
+
+    return;
+
+}
+
+bool runGame(game_t* game, graphic_context_t* gc) {
+    beginUpdating(game);
+
+    while (game->running) {
+        SDL_Event event;
+
+        while (SDL_PollEvent(&event)) handleEvents(game, gc, event);
+ 
+        pthread_mutex_lock(&game->gridLock);
+        render_state_t* rs = createRenderStateFromGame(game);
+        pthread_mutex_unlock(&game->gridLock);
+
+        draw(gc, rs);
+
+        destroyRenderState(&rs);
+
+        SDL_Delay(getFPSDelay(gc));
+    }
+
+    return true;
+}
+
+render_state_t* createRenderStateFromGame(game_t* game) {
+    return createRenderState(game->grid, game->mouseX, game->mouseY);
+}
+
 void beginUpdating(game_t* game) {
     if (!game) error("beginUpdating() got null argument 'game'");
     pthread_create(&game->updaterThread, NULL, gameUpdater, game);
@@ -42,16 +103,16 @@ void setGameParameters(game_t* game, parameters_t params) {
     else error("Called setGameParameters with 'delay' parameter not set (null)");
 
     if (params.rowsDefined)
-        game->grid.rows = params.rows;
+        game->grid->rows = params.rows;
     else error("Called setGameParameters with 'rows' parameter not set (null)");
 
     if (params.colsDefined)
-        game->grid.cols = params.cols;
+        game->grid->cols = params.cols;
     else error("Called setGameParameters with 'cols' parameter not set (null)");
 
-    game->grid.cells = malloc(game->grid.rows * game->grid.cols * sizeof(bool));
-    game->grid.elementSize = sizeof(bool);
-    memset(game->grid.cells, 0, game->grid.rows * game->grid.cols * sizeof(bool));
+    game->grid->cells = malloc(game->grid->rows * game->grid->cols * sizeof(bool));
+    game->grid->elementSize = sizeof(bool);
+    memset(game->grid->cells, 0, game->grid->rows * game->grid->cols * sizeof(bool));
 
     return;
 }
@@ -59,9 +120,9 @@ void setGameParameters(game_t* game, parameters_t params) {
 void update(game_t* game) {
     pthread_mutex_lock(&game->gridLock);
 
-    int cols = game->grid.cols;
-    int rows = game->grid.rows;
-    bool* cells = (bool*) game->grid.cells;
+    int cols = game->grid->cols;
+    int rows = game->grid->rows;
+    bool* cells = (bool*) game->grid->cells;
     bool* buffer = (bool*) malloc(rows * cols * sizeof(bool));
 
     for (int y = 0; y < rows; y++)
@@ -95,138 +156,6 @@ void update(game_t* game) {
     free(buffer);
 
     return;
-}
-
-void draw(game_t* game, graphic_context_t* gc) {
-    int rows = game->grid.rows;
-    int cols = game->grid.cols;
-    bool* gameCells = (bool*) game->grid.cells;
-    drawable_cell_t* gcCells = (drawable_cell_t*) gc->grid.cells;
-
-    int blockSize = gc->blockSize;
-    SDL_SetRenderDrawColor(gc->renderer, 0, 0, 0, 0xff);
-    SDL_RenderClear(gc->renderer);
-
-    pthread_mutex_lock(&game->gridLock);
-    for (int y = 0; y < rows; y++)
-    for (int x = 0; x < cols; x++) {
-        int index = y * cols + x;
-        if (gameCells[index]) {
-            if (gc->party) {
-                if (!gcCells[index].alive){
-                    SDL_Color newColor = getNextRandomColor();
-                    gcCells[index].color = newColor;
-                }
-                    setDrawColor(gc->renderer, gcCells[index].color);
-
-            } else SDL_SetRenderDrawColor(gc->renderer, 0xff, 0xff, 0xff, 0xff);
-
-            gcCells[index].alive = true;
-
-        } else {
-            gcCells[index].alive = false;
-            SDL_SetRenderDrawColor(gc->renderer, 0x0, 0x0, 0x0, 0x0);
-        }
-        SDL_FRect rect = {(float)(x * blockSize), (float)(y * blockSize), (float)(blockSize), (float)(blockSize)};
-        SDL_RenderFillRect(gc->renderer, &rect);
-
-    }
-
-    pthread_mutex_unlock(&game->gridLock);
-
-    if ( (game->mouseX > 0 && game->mouseX < cols * blockSize) && 
-            (game->mouseY > 0 && game->mouseY < rows * blockSize) )
-    {
-        int x = game->mouseX - (game->mouseX % blockSize);
-        int y = game->mouseY - (game->mouseY % blockSize);
-
-        SDL_FRect rect = {(float)x, (float)y, (float)blockSize, (float)blockSize};
-        SDL_SetRenderDrawColor(gc->renderer, 0xaa, 0xaa, 0xaa, 0xff);
-        SDL_RenderFillRect(gc->renderer, &rect);
-    }
-
-    SDL_RenderPresent(gc->renderer);
-
-    return;
-
-}
-
-SDL_Color getNextRandomColor() {
-    static Uint8 red = 0xff;
-    static Uint8 green = 0xff;
-    static Uint8 blue = 0xff;
-    static bool init = true;
-
-    if (init) {
-        init = false;
-        SDL_Color base = getTrueRandomColor();
-
-        red = base.r;
-        green = base.g;
-        blue = base.b;
-    }
-
-
-    Uint8* v = NULL;
-    switch (rand() % 3) {
-        case 0:
-            v = &red;
-            break;
-        case 1:
-            v = &green;
-            break;
-        case 2:
-            v = &blue;
-            break;
-    }
-
-    const int sup = COLOR_SUPERIOR_LIMIT;
-    const int inf = COLOR_INFERIOR_LIMIT;
-    const int definition = 10000;
-    //const int diff = 256 / 30;
-    const int diff = 5;
-
-    // --- "pull to center": fuerte en extremos, tranqui en el medio ---
-    // Probabilidad p in [0,1] de moverse hacia el centro:
-    //   p(mid)=0, p(inf)=1, p(sup)=1
-    // gamma controla cuán "fuerte" son los extremos (>=2 recomendado)
-    const double gamma = 10.;
-
-    const double mid  = 0.5 * (inf + sup);
-    const double half = 0.5 * (sup - inf);
-
-    double d = fabs((double)(*v) - mid) / half;   // 0..1
-    if (d < 0.0) d = 0.0;
-    if (d > 1.0) d = 1.0;
-
-    double p = pow(d, gamma);
-    int y = (int)((double)definition * p);
-
-    int delta;
-    if (rand() % definition < y) {
-        delta = (*v > (Uint8)mid) ? -diff : +diff;
-    } else {
-        delta = (rand() & 1) ? +diff : -diff;
-    }
-
-    int next = (int)(*v) + delta;
-    if (next < inf) next = inf;
-    if (next > sup) next = sup;
-    *v = (Uint8)next;
-
-    return (SDL_Color){.r=red, .g=green, .b=blue, .a=255};
-}
-
-SDL_Color getTrueRandomColor() {
-    // True random
-    const int inf = COLOR_INFERIOR_LIMIT;
-    const int sup = COLOR_SUPERIOR_LIMIT;
-
-    Uint8 r = rand() % (sup - inf) + inf;
-    Uint8 g = rand() % (sup - inf) + inf;
-    Uint8 b = rand() % (sup - inf) + inf;
-
-    return (SDL_Color){.r=r, .g=g, .b=b, .a=255};
 }
 
 /*
@@ -346,19 +275,21 @@ void handleEvents(game_t* game, graphic_context_t* gc, SDL_Event event) {
         break;
 
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
-        int c = event.button.x / gc->blockSize;
-        int r = event.button.y / gc->blockSize;
-        if (event.button.button == SDL_BUTTON_LEFT) rightClickSelection = r * game->grid.cols + c;
+        SDL_Point cell = getCellOnThisPixel(gc, event.button.x, event.button.y);
+        int c = cell.x;
+        int r = cell.y;
+        if (event.button.button == SDL_BUTTON_LEFT) rightClickSelection = r * game->grid->cols + c;
         break;
 
     case SDL_EVENT_MOUSE_BUTTON_UP:
-        c = event.button.x / gc->blockSize;
-        r = event.button.y / gc->blockSize;
+        cell = getCellOnThisPixel(gc, event.button.x, event.button.y);
+        c = cell.x;
+        r = cell.y;
 
         if (event.button.button == SDL_BUTTON_LEFT) {
-            if (rightClickSelection == (r * game->grid.cols + c)) {
+            if (rightClickSelection == (r * game->grid->cols + c)) {
                 pthread_mutex_lock(&game->gridLock);
-                ((bool*)game->grid.cells)[r * game->grid.cols + c] = !((bool*)game->grid.cells)[r * game->grid.cols + c];
+                ((bool*)game->grid->cells)[r * game->grid->cols + c] = !((bool*)game->grid->cells)[r * game->grid->cols + c];
                 pthread_mutex_unlock(&game->gridLock);
                 rightClickSelection = -1;
             }
@@ -368,7 +299,7 @@ void handleEvents(game_t* game, graphic_context_t* gc, SDL_Event event) {
 
     case SDL_EVENT_KEY_DOWN:
 
-        example_t e;
+        example_t* e = NULL;
         bool shouldLoadExample = false;
 
         switch (event.key.key) {
@@ -427,7 +358,6 @@ void handleEvents(game_t* game, graphic_context_t* gc, SDL_Event event) {
             case SDLK_LEFT:
             case SDLK_DOWN:
             case SDLK_RIGHT:
-                pthread_mutex_lock(&game->gridLock);
                 direction_t direction;
                 switch (event.key.key) {
                     case SDLK_UP: direction = DIRECTION_UP; break;
@@ -435,14 +365,14 @@ void handleEvents(game_t* game, graphic_context_t* gc, SDL_Event event) {
                     case SDLK_DOWN: direction = DIRECTION_DOWN; break;
                     case SDLK_RIGHT: direction = DIRECTION_RIGHT; break;
                 }
-                shiftGrid(game->grid, direction);
-                pthread_mutex_unlock(&game->gridLock);
-                shiftGrid(gc->grid, direction);
+                processShift(game, gc, direction);
                 break;
 
         } // END switch(event.key.keysym.sym) Qué botón se presionó?
         if (shouldLoadExample) {
-            loadExample(game, e);
+            pthread_mutex_lock(&game->gridLock);
+            loadExampleToGrid(game->grid, e);
+            pthread_mutex_unlock(&game->gridLock);
             destroyExample(&e);
             break;
         }
@@ -450,47 +380,15 @@ void handleEvents(game_t* game, graphic_context_t* gc, SDL_Event event) {
 
 }
 
-
-void loadExample(game_t* game, example_t example) {
-
-    int cols = game->grid.cols;
-    int rows = game->grid.rows;
-
-    pthread_mutex_lock(&game->gridLock);
-    memset(game->grid.cells, false, cols * rows * sizeof(bool));
-
-    int startingX = 0;
-    int startingY = 0;
-
-    switch (example.hpos) {
-        case LEFT: startingX = 0; break;
-        case CENTER: startingX = cols / 2 - example.cols / 2; break;
-        case RIGHT: startingX = cols - example.cols; break;
-    }
-
-    switch (example.vpos) {
-        case TOP: startingY = 0; break;
-        case MIDDLE: startingY = rows / 2 - example.rows / 2; break;
-        case BOTTOM: startingY = rows - example.rows; break;
-    }
-
-    for (int y = 0; y < example.rows; y++)
-    for (int x = 0; x < example.cols; x++) {
-        if ( example.cells[y * example.cols + x] )
-            ((bool*)game->grid.cells)[(startingY + y) * cols + startingX + x] = true;
-    }
-
-    pthread_mutex_unlock(&game->gridLock);
-
-    info("Loaded example to grid");
-
+void loadExample(game_t* game, example_t* example) {
+    loadExampleToGrid(game->grid, example);
     return;
-
 }
 
 void destroyGame(game_t** game){
-    if (*game != NULL) {
-        freeGrid((*game)->grid);
+    game_t* g = *game;
+    if (g != NULL) {
+        freeGrid(&(g->grid));
         free(*game);
     }
     *game = NULL;

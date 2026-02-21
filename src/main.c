@@ -5,6 +5,7 @@
 
 #include "utils/utils.h"
 #include "game/game.h"
+#include "graphic_context/graphic_context.h"
 #include "grid/grid.h"
 #include "config/config.h"
 #include "example/example.h"
@@ -46,21 +47,11 @@ int main(int argc, char* argv[]) {
     setGameParameters(game, params);
     setGraphicContextParameters(gc, params);
 
-    example_t e = chaos();
+    example_t* e = chaos();
     loadExample(game, e);
     destroyExample(&e);
 
-    beginUpdating(game);
-
-    while (game->running) {
-        SDL_Event event;
-
-        while (SDL_PollEvent(&event)) handleEvents(game, gc, event);
- 
-        draw(game, gc);
-
-        SDL_Delay(1000 / gc->fps);
-    }
+    runGame(game, gc);
 
     destroyGraphicContext(&gc);
     destroyGame(&game);

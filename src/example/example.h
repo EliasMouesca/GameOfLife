@@ -5,33 +5,15 @@
 
 #include "../grid/grid.h"
 
-typedef enum {
-    LEFT,
-    CENTER,
-    RIGHT
-} horizontalPosition_t;
+typedef struct example_t example_t;
 
-typedef enum {
-    TOP,
-    MIDDLE,
-    BOTTOM
-} verticalPosition_t;
-
-typedef struct {
-    int rows;
-    int cols;
-    bool* cells;
-    horizontalPosition_t hpos;
-    verticalPosition_t vpos;
-} example_t;
-
-void destroyExample(example_t* example);
-
-example_t nothing();
-example_t chaos();
-example_t diehard();
-example_t glider();
-example_t acorn();
-example_t galaxy();
+example_t* nothing();
+example_t* chaos();
+example_t* diehard();
+example_t* glider();
+example_t* acorn();
+example_t* galaxy();
+void loadExampleToGrid(grid_t* grid, example_t* example);
+void destroyExample(example_t** example);
 
 #endif

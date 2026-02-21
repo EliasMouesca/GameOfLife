@@ -1,11 +1,63 @@
-
 #include "graphic_context.h"
+
+#include <SDL3/SDL.h>
+#include <math.h>
+
+#include "../utils/utils.h"
+#include "../config/config.h"
+#include "../log/log.h"
+#include "../parameters/parameters.h"
+#include "../render_state/render_state.h"
+#include "../grid/grid.h"
+#include "../types/direction.h"
 
 #define SDL_INIT_FLAGS SDL_INIT_VIDEO
 #define WINDOW_TITLE "Game of Life"
 
 #define TEMPORARY_WIDTH 800
 #define TEMPORARY_HEIGHT 800
+
+#define COLOR_SUPERIOR_LIMIT 255
+#define COLOR_INFERIOR_LIMIT 100
+
+// -- Structs --
+struct graphic_context_t {
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    grid_t* grid;
+    int blockSize;
+    int fps;
+    bool party;
+};
+
+typedef struct drawable_cell_t {
+    SDL_Color color;
+    bool alive;
+} drawable_cell_t;
+// ----------------
+
+// ---- Forward declarations ----
+SDL_Color getNextRandomColor();
+SDL_Color getTrueRandomColor();
+void setDrawColor(SDL_Renderer* ren, SDL_Color color);
+// ------------------------------
+
+SDL_Point getCellOnThisPixel(graphic_context_t* gc, Sint32 x, Sint32 y) {
+    int c = x / gc->blockSize;
+    int r = y / gc->blockSize;
+
+    return (SDL_Point){.x=c, .y=r};
+}
+
+
+void processShiftGraphicContext(graphic_context_t* gc, direction_t direction) {
+    shiftGrid(gc->grid, direction);
+    return;
+}
+
+Uint32 getFPSDelay(graphic_context_t* gc) {
+    return 1000 / gc->fps;
+}
 
 graphic_context_t* createGraphicContext() {
     graphic_context_t* gc = (graphic_context_t*) malloc(sizeof(graphic_context_t));
@@ -40,6 +92,7 @@ void setGraphicContextParameters(graphic_context_t* gc, parameters_t params) {
     free(buffer);
 
     drawable_cell_t model = {.color={.r=0,.g=0,.b=0,.a=0},.alive=false};
+    freeGrid(&gc->grid);
     gc->grid = makeModelGrid(params.rows, params.cols, sizeof(drawable_cell_t), &model);
 
     gc->blockSize = params.blockSize;
@@ -59,6 +112,139 @@ void setGraphicContextParameters(graphic_context_t* gc, parameters_t params) {
     return;
 }
 
+void draw(graphic_context_t* gc, render_state_t* rs) {
+    int rows = rs->grid->rows;
+    int cols = rs->grid->cols;
+    bool* gameCells = (bool*) rs->grid->cells;
+    drawable_cell_t* gcCells = (drawable_cell_t*) gc->grid->cells;
+
+    Sint32 mouseX = rs->mouseX;
+    Sint32 mouseY = rs->mouseY;
+
+    int blockSize = gc->blockSize;
+    SDL_SetRenderDrawColor(gc->renderer, 0, 0, 0, 0xff);
+    SDL_RenderClear(gc->renderer);
+
+    for (int y = 0; y < rows; y++)
+    for (int x = 0; x < cols; x++) {
+        int index = y * cols + x;
+        if (gameCells[index]) {
+            if (gc->party) {
+                if (!gcCells[index].alive){
+                    SDL_Color newColor = getNextRandomColor();
+                    gcCells[index].color = newColor;
+                }
+                    setDrawColor(gc->renderer, gcCells[index].color);
+
+            } else SDL_SetRenderDrawColor(gc->renderer, 0xff, 0xff, 0xff, 0xff);
+
+            gcCells[index].alive = true;
+
+        } else {
+            gcCells[index].alive = false;
+            SDL_SetRenderDrawColor(gc->renderer, 0x0, 0x0, 0x0, 0x0);
+        }
+        SDL_FRect rect = {(float)(x * blockSize), (float)(y * blockSize), (float)(blockSize), (float)(blockSize)};
+        SDL_RenderFillRect(gc->renderer, &rect);
+
+    }
+
+    if ( (mouseX > 0 && mouseX < cols * blockSize) && 
+            (mouseY > 0 && mouseY < rows * blockSize) )
+    {
+        int x = mouseX - (mouseX % blockSize);
+        int y = mouseY - (mouseY % blockSize);
+
+        SDL_FRect rect = {(float)x, (float)y, (float)blockSize, (float)blockSize};
+        SDL_SetRenderDrawColor(gc->renderer, 0xaa, 0xaa, 0xaa, 0xff);
+        SDL_RenderFillRect(gc->renderer, &rect);
+    }
+
+    SDL_RenderPresent(gc->renderer);
+
+    return;
+
+}
+
+SDL_Color getNextRandomColor() {
+    static Uint8 red = 0xff;
+    static Uint8 green = 0xff;
+    static Uint8 blue = 0xff;
+    static bool init = true;
+
+    if (init) {
+        init = false;
+        SDL_Color base = getTrueRandomColor();
+
+        red = base.r;
+        green = base.g;
+        blue = base.b;
+    }
+
+
+    Uint8* v = NULL;
+    switch (rand() % 3) {
+        case 0:
+            v = &red;
+            break;
+        case 1:
+            v = &green;
+            break;
+        case 2:
+            v = &blue;
+            break;
+    }
+
+    const int sup = COLOR_SUPERIOR_LIMIT;
+    const int inf = COLOR_INFERIOR_LIMIT;
+    const int definition = 10000;
+    //const int diff = 256 / 30;
+    const int diff = 5;
+
+    // --- "pull to center": fuerte en extremos, tranqui en el medio ---
+    // Probabilidad p in [0,1] de moverse hacia el centro:
+    //   p(mid)=0, p(inf)=1, p(sup)=1
+    // gamma controla cuán "fuerte" son los extremos (>=2 recomendado)
+    const double gamma = 10.;
+
+    const double mid  = 0.5 * (inf + sup);
+    const double half = 0.5 * (sup - inf);
+
+    double d = fabs((double)(*v) - mid) / half;   // 0..1
+    if (d < 0.0) d = 0.0;
+    if (d > 1.0) d = 1.0;
+
+    double p = pow(d, gamma);
+    int y = (int)((double)definition * p);
+
+    int delta;
+    if (rand() % definition < y) {
+        delta = (*v > (Uint8)mid) ? -diff : +diff;
+    } else {
+        delta = (rand() & 1) ? +diff : -diff;
+    }
+
+    int next = (int)(*v) + delta;
+    if (next < inf) next = inf;
+    if (next > sup) next = sup;
+    *v = (Uint8)next;
+
+    return (SDL_Color){.r=red, .g=green, .b=blue, .a=255};
+}
+
+SDL_Color getTrueRandomColor() {
+    // True random
+    const int inf = COLOR_INFERIOR_LIMIT;
+    const int sup = COLOR_SUPERIOR_LIMIT;
+
+    Uint8 r = rand() % (sup - inf) + inf;
+    Uint8 g = rand() % (sup - inf) + inf;
+    Uint8 b = rand() % (sup - inf) + inf;
+
+    return (SDL_Color){.r=r, .g=g, .b=b, .a=255};
+}
+
+
 void destroyGraphicContext(graphic_context_t** gcp) {
     graphic_context_t* gc = *gcp;
     if (!gc) return;
@@ -73,7 +259,7 @@ void destroyGraphicContext(graphic_context_t** gcp) {
         gc->window = NULL;
     }
 
-    freeGrid(gc->grid);
+    freeGrid(&gc->grid);
 
     free(gc);
     *gcp = NULL;

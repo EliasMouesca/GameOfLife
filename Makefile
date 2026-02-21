@@ -1,6 +1,6 @@
 # FLAGS
 CC      := gcc
-CFLAGS  := -ggdb -Wall -Wextra -O2 -Iinclude $(shell pkg-config --cflags sdl3)
+CFLAGS  := -ggdb -Wall -Wno-stringop-truncation -Wextra -Wmisleading-indentation -O2 -Iinclude $(shell pkg-config --cflags sdl3)
 LDFLAGS := $(shell pkg-config --libs sdl3) -lm
 VALGRINDFLAGS := --tool=memcheck --leak-check=yes --track-origins=yes --num-callers=12 -s --quiet --show-leak-kinds=definite,indirect --errors-for-leak-kinds=definite,indirect
 

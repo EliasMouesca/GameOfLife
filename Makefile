@@ -1,7 +1,7 @@
 # FLAGS
 CC      := gcc
 CFLAGS  := -ggdb -Wall -Wno-stringop-truncation -Wextra -Wmisleading-indentation -O2 -Iinclude $(shell pkg-config --cflags sdl3)
-LDFLAGS := $(shell pkg-config --libs sdl3) -lm
+LDFLAGS := $(shell pkg-config --libs sdl3 sdl3-ttf) -lm
 VALGRINDFLAGS := --tool=memcheck --leak-check=yes --track-origins=yes --num-callers=12 -s --quiet --show-leak-kinds=definite,indirect --errors-for-leak-kinds=definite,indirect
 
 PWD := $(shell pwd)
@@ -36,8 +36,8 @@ test: $(TESTS)
 test-run: $(TARGET)
 	valgrind $(VALGRINDFLAGS) $(PWD)/$< --block-size 7
 
-test-run-fullscreen: $(TARGET)
-	valgrind $(VALGRINDFLAGS) $(PWD)/$< --block-size 7 --fullscreen --delay 10 --fps 60
+test-stress: $(TARGET)
+	$(PWD)/$< --block-size 7 --fullscreen --delay 100 --fps 60 --party
 
 clean:
 	rm -rf $(OBJ_DIR) $(TARGET) test test-*

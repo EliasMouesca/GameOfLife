@@ -1,6 +1,7 @@
 #include "graphic_context.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <math.h>
 
 #include "../utils/utils.h"
@@ -24,10 +25,16 @@
 struct graphic_context_t {
     SDL_Window* window;
     SDL_Renderer* renderer;
+    
+    TTF_Font* font;
+
     grid_t* grid;
     int blockSize;
     int fps;
     bool party;
+
+    Uint64 lastCounter;
+    double fpsSmooth;
 };
 
 typedef struct drawable_cell_t {
@@ -40,6 +47,7 @@ typedef struct drawable_cell_t {
 SDL_Color getNextRandomColor();
 SDL_Color getTrueRandomColor();
 void setDrawColor(SDL_Renderer* ren, SDL_Color color);
+void drawFPSBox(SDL_Renderer* ren, TTF_Font* font, Uint64 fps);
 // ------------------------------
 
 SDL_Point getCellOnThisPixel(graphic_context_t* gc, Sint32 x, Sint32 y) {
@@ -66,6 +74,13 @@ graphic_context_t* createGraphicContext() {
     if (!SDL_Init(SDL_INIT_FLAGS))
         critical("Could not initialize SDL: %s", SDL_GetError());
 
+    if (!TTF_Init())
+        critical("Could not initialize TTF library: %s", SDL_GetError());
+
+    gc->font = TTF_OpenFont("./fonts/SpaceMono-Regular.ttf", 14);
+    if (!gc->font)
+        critical("Could not open font");
+
     const int windowFlags = SDL_WINDOW_HIDDEN;
     gc->window = SDL_CreateWindow(WINDOW_TITLE,
         TEMPORARY_WIDTH, TEMPORARY_HEIGHT,      // Will be resized later
@@ -81,6 +96,9 @@ graphic_context_t* createGraphicContext() {
 
     gc->blockSize = 0;
     gc->fps = 0;
+
+    gc->lastCounter = SDL_GetPerformanceCounter();
+    gc->fpsSmooth = 0.0;
 
     return gc;
 }
@@ -160,10 +178,84 @@ void draw(graphic_context_t* gc, render_state_t* rs) {
         SDL_RenderFillRect(gc->renderer, &rect);
     }
 
+    bool countFps = true;
+    Uint64 now = SDL_GetPerformanceCounter();
+    Uint64 freq = SDL_GetPerformanceFrequency();
+
+    double dt = (double)(now - gc->lastCounter) / (double)freq;
+
+    if (dt > 0.0) {
+        double fps = 1.0 / dt;
+
+        if (gc->fpsSmooth == 0.0)
+            gc->fpsSmooth = fps;
+        else
+            gc->fpsSmooth = gc->fpsSmooth * 0.90 + fps * 0.10;
+
+        drawFPSBox(gc->renderer, gc->font, (Uint64)(gc->fpsSmooth + 0.5));
+    }
+
+    gc->lastCounter = now;
+
     SDL_RenderPresent(gc->renderer);
 
     return;
+}
 
+void drawFPSBox(SDL_Renderer* ren, TTF_Font* font, Uint64 fps) {
+    static SDL_Texture* text_tex = NULL;
+    static int tex_w = 0;
+    static int tex_h = 0;
+    static Uint64 last_fps = (Uint64)-1;
+
+    char buffer[32];
+
+    // recrear textura solo si cambia FPS
+    if (fps != last_fps) {
+        last_fps = fps;
+
+        if (text_tex) {
+            SDL_DestroyTexture(text_tex);
+            text_tex = NULL;
+        }
+
+        snprintf(buffer, sizeof(buffer), "FPS: %llu", (unsigned long long)fps);
+
+        SDL_Color color = {255, 255, 255, 255};
+        SDL_Surface* surf = TTF_RenderText_Blended(font, buffer, 0, color);
+        if (!surf) return;
+
+        text_tex = SDL_CreateTextureFromSurface(ren, surf);
+        tex_w = surf->w;
+        tex_h = surf->h;
+
+        SDL_DestroySurface(surf);
+    }
+
+    if (!text_tex) return;
+
+    const int padding = 6;
+
+    SDL_FRect bg = {
+        10,
+        10,
+        tex_w + padding * 2,
+        tex_h + padding * 2
+    };
+
+    // fondo semitransparente
+    SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(ren, 0, 0, 0, 160);
+    SDL_RenderFillRect(ren, &bg);
+
+    SDL_FRect dst = {
+        bg.x + padding,
+        bg.y + padding,
+        tex_w,
+        tex_h
+    };
+
+    SDL_RenderTexture(ren, text_tex, NULL, &dst);
 }
 
 SDL_Color getNextRandomColor() {

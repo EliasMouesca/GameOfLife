@@ -1,3 +1,4 @@
+- Font configurable y arreglar un poco el tema de la font
 - Implementar la flag --rainbow (que es parecido a --party pero no por cada celda sino en general), hacer configurables los parámetros.
 - --autostart flag y --example flag
 - Que en solve parameters, nunca vuelva sin setear que termine al menos seteando el base default

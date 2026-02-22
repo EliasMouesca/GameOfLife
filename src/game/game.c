@@ -69,7 +69,12 @@ void processShift(game_t* game, graphic_context_t* gc, direction_t direction) {
 bool runGame(game_t* game, graphic_context_t* gc) {
     beginUpdating(game);
 
+    const Uint64 freq = SDL_GetPerformanceFrequency();
+    const Uint64 target = getFPSTargetTicks(gc);
+
     while (game->running) {
+        Uint64 start = SDL_GetPerformanceCounter();
+
         SDL_Event event;
 
         while (SDL_PollEvent(&event)) handleEvents(game, gc, event);
@@ -82,7 +87,26 @@ bool runGame(game_t* game, graphic_context_t* gc) {
 
         destroyRenderState(&rs);
 
-        SDL_Delay(getFPSDelay(gc));
+        if (target > 0) {
+            Uint64 now = SDL_GetPerformanceCounter();
+            Uint64 elapsed = SDL_GetPerformanceCounter() - start;
+
+            if (elapsed < target) {
+                Uint64 remaining = target - elapsed;
+
+                double diff = (double)(remaining) * 1000.0 / (double)freq;
+                now = SDL_GetPerformanceCounter();
+                remaining = target - (now - start);
+
+                if ((Sint64)remaining > 0) {
+                    // ticks → nanosegundos
+                    Uint64 ns =
+                        (Uint64)((double)remaining * 1e9 / (double)freq);
+
+                    SDL_DelayPrecise(ns);
+                }
+            }
+        }
     }
 
     return true;

@@ -11,7 +11,7 @@ typedef struct graphic_context_t graphic_context_t;
 graphic_context_t* createGraphicContext();
 void setGraphicContextParameters(graphic_context_t* gc, parameters_t params);
 void draw(graphic_context_t* gc, render_state_t* rs);
-Uint32 getFPSDelay(graphic_context_t* gc);
+Uint32 getFPSTargetTicks(graphic_context_t* gc);
 void processShiftGraphicContext(graphic_context_t* gc, direction_t direction);
 SDL_Point getCellOnThisPixel(graphic_context_t* gc, Sint32 x, Sint32 y);
 void destroyGraphicContext(graphic_context_t** gc);

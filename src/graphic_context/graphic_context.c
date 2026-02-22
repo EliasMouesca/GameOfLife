@@ -33,7 +33,7 @@ struct graphic_context_t {
     int fps;
     bool party;
 
-    Uint64 lastCounter;
+    Uint64 fpsCounter;
     double fpsSmooth;
 };
 
@@ -63,8 +63,9 @@ void processShiftGraphicContext(graphic_context_t* gc, direction_t direction) {
     return;
 }
 
-Uint32 getFPSDelay(graphic_context_t* gc) {
-    return 1000 / gc->fps;
+Uint32 getFPSTargetTicks(graphic_context_t* gc) {
+    const Uint64 freq = SDL_GetPerformanceFrequency();
+    return (gc->fps > 0) ? (freq / (Uint64)gc->fps) : 0;
 }
 
 graphic_context_t* createGraphicContext() {
@@ -97,7 +98,7 @@ graphic_context_t* createGraphicContext() {
     gc->blockSize = 0;
     gc->fps = 0;
 
-    gc->lastCounter = SDL_GetPerformanceCounter();
+    gc->fpsCounter = SDL_GetPerformanceCounter();
     gc->fpsSmooth = 0.0;
 
     return gc;
@@ -182,7 +183,7 @@ void draw(graphic_context_t* gc, render_state_t* rs) {
     Uint64 now = SDL_GetPerformanceCounter();
     Uint64 freq = SDL_GetPerformanceFrequency();
 
-    double dt = (double)(now - gc->lastCounter) / (double)freq;
+    double dt = (double)(now - gc->fpsCounter) / (double)freq;
 
     if (dt > 0.0) {
         double fps = 1.0 / dt;
@@ -195,7 +196,7 @@ void draw(graphic_context_t* gc, render_state_t* rs) {
         drawFPSBox(gc->renderer, gc->font, (Uint64)(gc->fpsSmooth + 0.5));
     }
 
-    gc->lastCounter = now;
+    gc->fpsCounter = now;
 
     SDL_RenderPresent(gc->renderer);
 
